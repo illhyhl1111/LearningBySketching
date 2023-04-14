@@ -277,6 +277,8 @@ def LBS_loss_fn(model, opt, clip_loss_fn, inputs, train_model=True):
 
     if args.embed_loss in ['simclr', 'supcon']:
         k = model.get_key_value(img_k, img_mask_k)
+    else:
+        k = None
 
     ##### L_{embed} #####
     if args.lbd_e > 0:

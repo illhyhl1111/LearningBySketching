@@ -21,4 +21,4 @@ evaluate_every: 500
 validate_every: 10
 
 xpid: Geoclidean_constraints
-comment: LBS(no_embed)
+comment: LBS

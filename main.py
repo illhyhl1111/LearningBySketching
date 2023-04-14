@@ -297,7 +297,7 @@ def main():
         xp_args=args.__dict__,
         rootdir="logs",
         timestamp=xp_time,
-        use_tensorboard=(not args.disable_tensorboard),
+        use_tensorboard=(not args.no_tensorboard),
         resume=False,
     )
     args.logdir = logger.basepath

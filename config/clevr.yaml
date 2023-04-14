@@ -12,4 +12,4 @@ lbd_p: 1
 lbd_e: 0
 
 xpid: CLEVR
-comment: LBS(no_embed)
+comment: LBS

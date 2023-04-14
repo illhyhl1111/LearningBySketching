@@ -458,7 +458,7 @@ class Geoclidean(Dataset):
             self.size = data_per_class * 17
 
         split_dir = "train" if split == "train" else "test"
-        self.data_dir = os.path.join(root, "geoclidean-transfer", data_type, split_dir)
+        self.data_dir = os.path.join(root, "geoclidean", data_type, split_dir)
         self.idx_to_class = sorted(os.listdir(self.data_dir))
 
     def __getitem__(self, index):

@@ -389,10 +389,7 @@ def set_tasks_from_dataset(eval_args):
             tasks += ['rightmost_size', 'rightmost_shape', 'rightmost_material']
         tasks += ['rightmost_shift', 'rightmost_third']
     elif args.dataset.startswith('mnist'):
-        if eval_args.angle:
-            tasks = ['angle']
-        else:
-            tasks = ['class']
+        tasks = ['class']
     elif args.dataset == 'shoe':
         tasks = ['retrieval']
     else:
@@ -405,11 +402,10 @@ if __name__ == "__main__":
 
     # model dataset
     parser.add_argument('path', type=str, default='')
-    parser.add_argument('--data_root', type=str, default='/home/hdlee/data')
+    parser.add_argument('--data_root', type=str, default='data')
     parser.add_argument('--rep_type', type=str, default='as_train')
 
     # other setting
-    parser.add_argument('--angle', action='store_true')
     parser.add_argument('--no_cuda', action='store_true')
     parser.add_argument('--save_to', type=str, default='')
     
@@ -417,7 +413,7 @@ if __name__ == "__main__":
     parser.add_argument('--baseline', type=str, choices=['ours', 'baseline', 'btcvae', 'geossl', 'ltd', 'paint', 'hog', 'clip', 'hog_cnn'], default='ours')
     parser.add_argument('--model', type=str, default='resnet18')
     parser.add_argument('--dataset', type=str, default='')
-    parser.add_argument('--method', type=str, default='supcon', choices=['supcon', 'simclr', 'moco', 'ce', 'angle', 'ce_angle', 'btcvae', 'geossl'])
+    parser.add_argument('--method', type=str, default='supcon', choices=['supcon', 'simclr', 'moco', 'ce', 'btcvae', 'geossl'])
 
     eval_args = parser.parse_args()
 

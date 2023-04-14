@@ -18,8 +18,8 @@ def set_seed(seed):
 def parse_arguments():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_root", type=str, default="/home/hdlee/data", help="dataset root directory")
-    parser.add_argument("--no_cuda", action='store_true')
+    parser.add_argument("--data_root", type=str, default="data", help="dataset root directory")
+    parser.add_argument("--no_cuda", action='store_true', help="load model in cpu")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--config_path", type=str, default="config/clevr.yaml")
 
@@ -39,16 +39,14 @@ def parse_arguments():
     parser.add_argument("--connected", action='store_true')
     parser.add_argument("--enable_radius", action='store_true')
     parser.add_argument("--enable_color", action='store_true')
+    parser.add_argument("--disable_radius", action='store_false', dest='enable_radius')
+    parser.add_argument("--disable_color", action='store_false', dest='enable_color')
 
 
     # =================================
     # =========== CLIP loss ===========
     # =================================
-    parser.add_argument("--percep_loss", type=str, default="none",
-                        help="the type of perceptual loss to be used (L2/LPIPS/none)")
     parser.add_argument("--num_aug_clip", type=int, default=4)
-    parser.add_argument("--augemntations", type=str, default="affine",
-                        help="can be any combination of: 'affine_noise_eraserchunks_eraser_press'")
     parser.add_argument("--clip_conv_loss_type", type=str, default="L2")
     parser.add_argument("--clip_conv_layer_weights",
                         type=str, default="0,0,1.0,1.0,0")
@@ -61,9 +59,9 @@ def parse_arguments():
     # =================================
     parser.add_argument('--batch', type=int, default=64)
     parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument('--lbd_g', default=1.0, type=float, help='weight for ground-truth loss')
-    parser.add_argument('--lbd_p', default=1.0, type=float, help='weight for clip loss')
-    parser.add_argument('--lbd_e', default=1.0, type=float, help='weight for infonce loss')
+    parser.add_argument('--lbd_g', default=1.0, type=float, help='weight for L_guide')
+    parser.add_argument('--lbd_p', default=1.0, type=float, help='weight for L_percept')
+    parser.add_argument('--lbd_e', default=1.0, type=float, help='weight for L_embed')
     parser.add_argument('--epochs', default=500, type=int)
     parser.add_argument('--dataset', type=str, default='sketch')
 
@@ -74,7 +72,7 @@ def parse_arguments():
 
     parser.add_argument('--hungarian', action='store_true')
     parser.add_argument('--prev_weight', type=float, default=0.0)
-    parser.add_argument('--embed_loss', type=str, choices=['ce', 'simclr', 'supcon', 'triplet'], default='simclr')
+    parser.add_argument('--embed_loss', type=str, choices=['none', 'ce', 'simclr', 'supcon', 'triplet'], default='none')
     parser.add_argument('--train_encoder', action='store_true')
     parser.add_argument('--rep_type', type=str, default='LBS+')
     parser.add_argument('--no_mask', action='store_true')
@@ -94,7 +92,7 @@ def parse_arguments():
     parser.add_argument('--validate_every', help='', default=1, type=int)
     parser.add_argument('--comment', help='Comment', default='test', type=str)
     parser.add_argument('--xpid', help='Distinguishable experiment id', default='test', type=str)
-    parser.add_argument('--disable_tensorboard', help='Disable Tensorboard SummaryWriter', action='store_true')
+    parser.add_argument('--no_tensorboard', help='Disable Tensorboard SummaryWriter', action='store_true')
     parser.add_argument('--no_eval', help='no evaluation', action='store_true')
     parser.add_argument('--start_epoch', default=0, type=int)
     parser.add_argument('--load_path', type=str, default=None)
@@ -129,6 +127,8 @@ def parse_arguments():
     
     # set specified arguments in command line
     aux_parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
+    for arg in ['disable_radius', 'disable_color']:
+        aux_parser.add_argument('--'+arg, action='store_false', dest=arg.replace('disable', 'enable'))
     for arg in args_: 
         if type(args_[arg]) == bool:
             aux_parser.add_argument('--'+arg, action='store_true')
@@ -137,11 +137,15 @@ def parse_arguments():
     cli_args, _ = aux_parser.parse_known_args()
     args.update(Config.from_dict(vars(cli_args)))
     
+    # set seed
     set_seed(args.seed)
 
     args.clip_conv_layer_weights = [
         float(item) for item in args.clip_conv_layer_weights.split(',')]
-
+    
+    if args.embed_loss == 'none':
+        args.lbd_e = 0.0
+    
     if not args.no_cuda:
         args.device = torch.device(
             "cuda" if (torch.cuda.is_available() and torch.cuda.device_count() > 0) else "cpu"
