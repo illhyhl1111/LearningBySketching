@@ -16,7 +16,7 @@ try:
 except ModuleNotFoundError:
     import pickle
 
-from sketch_utils import *
+from utils.sketch_utils import *
 
 
 class SketchDataset(Dataset):

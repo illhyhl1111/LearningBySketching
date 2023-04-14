@@ -3,7 +3,7 @@ import os
 import random
 import numpy as np
 import torch
-from config import Config
+from utils.config import Config
 
 
 def set_seed(seed):

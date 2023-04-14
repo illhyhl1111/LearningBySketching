@@ -1,4 +1,4 @@
-from config import Config
+from utils.config import Config
 
 args = Config()
 stroke_config = Config()

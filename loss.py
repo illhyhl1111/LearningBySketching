@@ -1,10 +1,10 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from sketch_utils import *
+from utils.sketch_utils import *
 from scipy.optimize import linear_sum_assignment
 
-from shared import args
-from shared import stroke_config as config
+from utils.shared import args
+from utils.shared import stroke_config as config
 
 
 criterion_l1 = torch.nn.L1Loss().cuda()

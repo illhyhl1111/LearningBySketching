@@ -10,15 +10,15 @@ from torchvision.utils import make_grid
 from torch.optim.lr_scheduler import _LRScheduler
 import torchvision.transforms.functional as functional
 from sklearn.model_selection import train_test_split
-import argparser
+import utils.argparser as argparser
 import json
 
 from models.LBS import SketchModel
 from U2Net_.model import U2NET
 import shlex
 
-from config import Config
-from shared import update_args, update_config
+from utils.config import Config
+from utils.shared import update_args, update_config
 
 U2Net = None
 

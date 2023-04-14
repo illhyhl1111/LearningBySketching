@@ -4,13 +4,13 @@ import torch.nn.functional as F
 from torchvision.transforms import Resize, Compose, CenterCrop, Normalize, InterpolationMode
 BICUBIC = InterpolationMode.BICUBIC
 
-import sketch_utils
+import utils.sketch_utils as sketch_utils
 from models.renderer import Renderer
 from models.resnet import resnet18
 import CLIP_.clip as clip
 
-from shared import args
-from shared import stroke_config as config
+from utils.shared import args
+from utils.shared import stroke_config as config
 
 class Lambda(nn.Module):
         def __init__(self, func):

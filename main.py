@@ -5,18 +5,18 @@ import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-import argparser
+import utils.argparser as argparser
 from datasets import get_dataset
 from models.LBS import SketchModel
 from models.clip_loss import Loss as CLIPLoss
-from sketch_utils import *
+from utils.sketch_utils import *
 from loss import LBS_loss_fn, l1_loss_fn
 from file_writer import FileWriter
 from evaluate import eval_sketch
 
-from shared import args
-from shared import stroke_config as config
-from shared import update_args, update_config
+from utils.shared import args
+from utils.shared import stroke_config as config
+from utils.shared import update_args, update_config
 
 clip_loss_fn = None
 
@@ -255,14 +255,14 @@ def validation(model, optimizer, val_loader, logger, train_with_gt, epoch):
 
 
 def main():
-    args = argparser.parse_arguments()
+    args = utils.argparser.parse_arguments()
 
     train_set, val_set, eval_train_set, eval_test_set, image_shape, class_num = get_dataset(args.dataset, data_root=args.data_root)
 
     args.image_size = image_shape[1]
     args.image_num_channel = image_shape[0]
     args.class_num = class_num
-    stroke_config = argparser.get_stroke_config(args)
+    stroke_config = utils.argparser.get_stroke_config(args)
 
     update_args(args)
     update_config(stroke_config)
