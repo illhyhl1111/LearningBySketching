@@ -1,22 +1,23 @@
 # Learning Geometry-aware Representations by Sketching (CVPR 2023)
 
-[![arXiv](https://img.shields.io/badge/arXiv-2023.xxxxx-b31b1b.svg)](https://arxiv.org/abs/xxxx.xxxxx)
+[![arXiv](https://img.shields.io/badge/arXiv-2023.TODO-b31b1b.svg)](link)
 
 This repository contains the pytorch code for reproducing our paper "Learning Geometry-aware Representations by Sketching".
 
 <p align="center">
-  <img src="md_images/concept_sketch.png"  width="70%">
+  <img src="md_images/fig1.svg"  style="width:50%; margin-right:20px"> <img src="md_images/overlayed.png"  width="18%">
 </p>
 
 At a high level, our model learns to abstract an image into a stroke-based color sketch that accurately reflects the geometric information (e.g., position, shape, size).
 Our sketch consists of a set of strokes represented by a parameterized vector that specifies their curvature, color, and thickness.
 We use these parameterized vectors directly as a compact representation of an image.
 
+
 ## Overview
 
 ![](md_images/fig3.svg)
 
-An overview of LBS(Learning by Sketching), including CNN-based encoder, Transformer-based Stroke Generator, Stroke Embedding Network and Differentiable Rasterizer.
+An overview of LBS(Learning by Sketching), including a CNN-based encoder, Transformer-based Stroke Generator, a Stroke Embedding Network and a Differentiable Rasterizer.
 
 For training, we use CLIP-based perceptual loss, a guidance stroke from optimization-based generation ([CLIPasso](https://github.com/yael-vinker/CLIPasso)).
 You can optionally train with an additional loss function specified by the `--embed_loss` argument (`choices=['ce', 'simclr', 'supcon', 'triplet']`).
@@ -48,7 +49,7 @@ python setup.py install
 ```
 
 ### Preparing datasets
-By default, the code assumes that all the datasets are placed under `./data/`. You can change this path by specifying `--data_root`.
+By default, the code assumes that all the datasets are located under `./data/`. You can change this path by specifying `--data_root`.
 
 * **STL-10, Rotated MNIST**: will be automatically downloaded.
 * **CLEVR dataset**: [download](https://dl.fbaipublicfiles.com/clevr/CLEVR_v1.0.zip) `CLEVR_v1.0.zip`.
@@ -94,7 +95,7 @@ The structure should be as:
 
 ### Generate guidance stroke
 
-To train our model with CLEVR, STL-10, and QMUL-ShoeV2 dataset, you must first generate guidance strokes.
+To train our model with the CLEVR, STL-10, and QMUL-ShoeV2 datasets, you must first generate guidance strokes.
 
 1. You can generate the guidance strokes with:
    - TODO
