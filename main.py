@@ -9,11 +9,11 @@ from datasets import get_dataset
 from models.LBS import SketchModel
 from models.clip_loss import Loss as CLIPLoss
 from loss import LBS_loss_fn, l1_loss_fn
-from file_writer import FileWriter
 from evaluate import eval_sketch
 
 import argparser
 from utils.sketch_utils import *
+from utils.file_writer import FileWriter
 from utils.shared import args
 from utils.shared import stroke_config as config
 from utils.shared import update_args, update_config
