@@ -1,0 +1,17 @@
+dataset: stl10
+epochs: 50
+batch: 32
+rep_type: LBS
+
+enable_color: True
+num_strokes: 20
+num_background: 4
+
+lbd_g: 1
+lbd_p: 1
+lbd_e: 0
+
+no_mask: False
+
+xpid: STL10
+comment: LBS(no_embed)

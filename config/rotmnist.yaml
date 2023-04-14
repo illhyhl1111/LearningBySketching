@@ -1,0 +1,23 @@
+dataset: mnist_30,45_0,90
+lr: 0.001
+epochs: 200
+batch: 128
+rep_type: LBS
+
+enable_color: False
+enable_radius: True
+num_strokes: 8
+num_background: 0
+radius: 0.001
+
+n_hidden: 256
+n_embedding: 256
+d_project: 128
+n_layers: 2
+
+lbd_g: 1
+lbd_p: 1
+lbd_e: 0
+
+xpid: rotMNIST
+comment: LBS(no_embed)

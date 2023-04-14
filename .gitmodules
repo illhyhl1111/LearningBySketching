@@ -1,0 +1,3 @@
+[submodule "third_party/baselines"]
+	path = third_party/baselines
+	url = https://github.com/illhyhl1111/sketch_baselines.git

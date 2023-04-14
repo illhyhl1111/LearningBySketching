@@ -1,0 +1,15 @@
+dataset: clevr
+epochs: 200
+batch: 32
+rep_type: LBS
+
+enable_color: True
+num_strokes: 24
+num_background: 0
+
+lbd_g: 10
+lbd_p: 1
+lbd_e: 0
+
+xpid: CLEVR
+comment: LBS(no_embed)

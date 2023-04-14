@@ -1,0 +1,24 @@
+dataset: geoclidean_constraints_positive
+lr: 0.001
+epochs: 5000
+batch: 128
+rep_type: LBS
+enable_color: False
+num_strokes: 4
+num_background: 0
+radius: 0.002
+
+n_hidden: 256
+n_embedding: 256
+d_project: 128
+n_layers: 2
+
+lbd_g: 1
+lbd_p: 10
+lbd_e: 0
+
+evaluate_every: 500
+validate_every: 10
+
+xpid: Geoclidean_constraints
+comment: LBS(no_embed)
