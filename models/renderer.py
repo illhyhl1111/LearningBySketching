@@ -7,8 +7,8 @@ from third_party.disttrans import *
 from third_party.raster import exp
 from third_party.composite import *
 
-from shared import args
-from shared import stroke_config as config
+from utils.shared import args
+from utils.shared import stroke_config as config
 
 
 class Renderer(nn.Module):

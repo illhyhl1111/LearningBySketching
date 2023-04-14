@@ -11,10 +11,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
-import argparser
 from datasets import get_dataset
-from shared import args
-from sketch_utils import *
+import argparser
+from utils.shared import args
+from utils.sketch_utils import *
 from third_party.hog import HOGLayerMoreComplicated
 
 

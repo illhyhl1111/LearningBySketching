@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from utils.sketch_utils import *
 from scipy.optimize import linear_sum_assignment
 
+from utils.sketch_utils import *
 from utils.shared import args
 from utils.shared import stroke_config as config
 

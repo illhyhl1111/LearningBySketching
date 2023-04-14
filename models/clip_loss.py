@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torchvision import models, transforms
 
-from shared import args
+from utils.shared import args
 
 class Loss(nn.Module):
     def __init__(self):
