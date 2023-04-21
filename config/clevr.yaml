@@ -1,4 +1,4 @@
-dataset: clevr
+dataset: clevr_color
 epochs: 200
 batch: 32
 rep_type: LBS+      # z_e will not be used automatically if embed_loss is 'none'

@@ -44,7 +44,8 @@ def unpack_dataloader(datas, train_with_gt=True, use_mask=False):
             "color_k": color_k.to(device, non_blocking=True),                                   # [bs, 9, nL, 3]
             "mask_k": mask_k.to(device, non_blocking=True),
 
-            "label": [label.to(device, non_blocking=True) for label in labels],
+            "label": [label.to(device, non_blocking=True) for label in labels] if isinstance(labels, list) \
+                    else labels.to(device, non_blocking=True),
         }
 
     (img, img_k), label = datas
