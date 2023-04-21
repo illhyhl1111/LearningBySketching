@@ -13,10 +13,8 @@ from evaluate import eval_sketch
 
 import argparser
 from utils.sketch_utils import *
-from utils.file_writer import FileWriter
-from utils.shared import args
+from utils.shared import args, logger, update_args, update_config
 from utils.shared import stroke_config as config
-from utils.shared import update_args, update_config
 
 clip_loss_fn = None
 
@@ -60,7 +58,7 @@ def unpack_dataloader(datas, train_with_gt=True, use_mask=False):
     }
 
 
-def train(model, optimizer, scheduler, loaders, logger, train_with_gt=True):
+def train(model, optimizer, scheduler, loaders, train_with_gt=True):
     """Train a model with gt
 
     Args:
@@ -68,7 +66,6 @@ def train(model, optimizer, scheduler, loaders, logger, train_with_gt=True):
         optimizer ([type]): [description]
         scheduler ([type]): [description]
         loaders ([type]): [description]
-        logger ([type]): [description]
     """
     train_loader, val_loader, _, eval_test_loader = loaders
 
@@ -97,14 +94,14 @@ def train(model, optimizer, scheduler, loaders, logger, train_with_gt=True):
         ### train
         if epoch != args.start_epoch:
             model.train()
-            train_epoch(model, optimizer, scheduler, train_loader, logger, train_with_gt, epoch)
+            train_epoch(model, optimizer, scheduler, train_loader, train_with_gt, epoch)
 
         ### validation
         logger.log_dirname(f"Epoch {epoch}")
         model.eval()
 
         if epoch % args.validate_every == 0:
-            val_loss, imgs, sketches = validation(model, optimizer, val_loader, logger, train_with_gt, epoch)
+            val_loss, imgs, sketches = validation(model, optimizer, val_loader, train_with_gt, epoch)
 
             if val_loss < best_loss:
                 best_loss = val_loss
@@ -120,44 +117,44 @@ def train(model, optimizer, scheduler, loaders, logger, train_with_gt=True):
             ### tensorboard log
             if train_with_gt:
                 image_grid = image_grids.get("recon")
-                plot_results_gt(model, logger, image_grid, imgs, sketches, epoch)
+                plot_results_gt(model, image_grid, imgs, sketches, epoch)
 
             else:
                 image_grid = image_grids.get("recon")
-                plot_results_l1(model, logger, image_grid, imgs, sketches, epoch)
+                plot_results_l1(model, image_grid, imgs, sketches, epoch)
 
             image_grid = image_grids.get("sequential")
-            plot_sequential(model, logger, eval_test_loader, image_grid, epoch)
+            plot_sequential(model, eval_test_loader, image_grid, epoch)
 
         ### evaluate with current model & save
         if epoch != 0 and epoch % args.evaluate_every == 0:
             if not args.no_eval:
-                eval_task(model, logger, epoch)
+                eval_task(model, epoch)
 
             state_dict = model.state_dict()
             torch.save(state_dict, logger.basepath + f"/model_{epoch}.pt")
 
 
-def eval_task(model, logger, epoch):
+def eval_task(model, epoch):
     if args.dataset.startswith("clevr"):
         tasks = ["rightmost_color", "rightmost_size", "rightmost_shape", "rightmost_material"]
     elif args.dataset == "shoe":
         tasks = ["retrieval"]
     else:
         tasks = ["class"]
-    sketches = eval_sketch(model, tasks, logger)
+    sketches = eval_sketch(model, tasks)
 
     for task, acc in sketches.items():
         logger.scalar_summary(f"eval_{task}", acc, epoch)
 
 
-def plot_sequential(model, logger, eval_test_loader, image_grid, epoch):
+def plot_sequential(model, eval_test_loader, image_grid, epoch):
     process = model.eval_grid(eval_test_loader.dataset)
     process_grid = image_grid.update(process)
     logger.figure_summary("validation_process", process_grid, epoch)
 
 
-def plot_results_l1(model, logger, image_grid, inputs, sketches, epoch):
+def plot_results_l1(model, image_grid, inputs, sketches, epoch):
     img = inputs["img"]
     sketch = sketches["sketch"]
 
@@ -167,7 +164,7 @@ def plot_results_l1(model, logger, image_grid, inputs, sketches, epoch):
     logger.figure_summary("reconstruction", img_grid, epoch)
 
 
-def plot_results_gt(model, logger, image_grid, inputs, sketches, epoch):
+def plot_results_gt(model, image_grid, inputs, sketches, epoch):
     gt_pos = inputs['pos']
     gt_color = inputs['color']
     pos_final = gt_pos[:, -1]
@@ -196,7 +193,7 @@ def plot_results_gt(model, logger, image_grid, inputs, sketches, epoch):
     logger.figure_summary("reconstruction", img_grid, epoch)   
 
 
-def train_epoch(model, optimizer, scheduler, train_loader, logger, train_with_gt, epoch):
+def train_epoch(model, optimizer, scheduler, train_loader, train_with_gt, epoch):
     loss_dict = {}
     for idx, datas in enumerate(train_loader):
         steps = epoch * len(train_loader) + idx
@@ -222,7 +219,7 @@ def train_epoch(model, optimizer, scheduler, train_loader, logger, train_with_gt
                 logger.scalar_summary(name, values, steps)
 
 
-def validation(model, optimizer, val_loader, logger, train_with_gt, epoch):
+def validation(model, optimizer, val_loader, train_with_gt, epoch):
     val_loss = 0
     val_acc = 0
     val_count = 0
@@ -291,7 +288,7 @@ def main():
         scheduler.step(args.start_epoch * len(train_loader))
 
     xp_time = time.strftime("%m%d-%H%M%S")
-    logger = FileWriter(
+    logger.init(
         xpid=args.xpid,
         tag=f"{args.comment}_seed{args.seed}",
         xp_args=args.__dict__,
@@ -316,7 +313,6 @@ def main():
         optimizer=optimizer,
         scheduler=scheduler,
         loaders=(train_loader, val_loader, eval_train_loader, eval_test_loader),
-        logger=logger,
         train_with_gt=train_with_gt
     )
 

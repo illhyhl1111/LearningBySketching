@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from datasets import get_dataset
 import argparser
-from utils.shared import args
+from utils.shared import args, logger
 from utils.sketch_utils import *
 from third_party.hog import HOGLayerMoreComplicated
 
@@ -70,12 +70,11 @@ class RepLabelPair(Dataset):
 
 
 class LinearProbe():
-    def __init__(self, data, tasks, model, logger):
+    def __init__(self, data, tasks, model):
         self.model = model
         self.device = args.device
         self.data = data
         self.tasks = tasks
-        self.logger = logger
 
         self.task_bin = OrderedDict()
         self.label_fn_dict = OrderedDict()
@@ -195,7 +194,7 @@ class LinearProbe():
             param_group['lr'] = lr
         
     def eval_task(self):
-        self.logger.log(f'evaluating {self.data}, {self.tasks}')
+        logger.log(f'evaluating {self.data}, {self.tasks}')
         tic = time.time()
         max_acc = {task: 0 for task in self.tasks}
 
@@ -203,7 +202,7 @@ class LinearProbe():
             z_size = self.train_set.dim_len()
             total_num = sum(self.task_bin.values())
             if self.two_layer:
-                self.logger.log('using 2 layer classifier')
+                logger.log('using 2 layer classifier')
                 linear = nn.Sequential(
                     nn.Linear(z_size, z_size),
                     nn.ReLU(),
@@ -259,17 +258,17 @@ class LinearProbe():
                         log += f'{task}: {acc[task]:.2f}%, '
 
                 print(log, end='\r')
-            self.logger.log(log)
+            logger.log(log)
 
         result = max_acc
         result_log = f'\nevaluation results for {self.data}\n'
         for task, acc in max_acc.items():
             result_log += f'{task}: {acc:.3f}%, '
-        self.logger.log(f'{result_log}\nelapsed time: {time.time()-tic:.2f}s')
+        logger.log(f'{result_log}\nelapsed time: {time.time()-tic:.2f}s')
         return result
 
 
-def eval_sketch(model, tasks, logger):
+def eval_sketch(model, tasks):
     for task in tasks:
         if task == 'retrieval':
             _, _, _, test_set, _, _ = get_dataset(args.dataset, args.data_root, eval_only=True)
@@ -278,11 +277,11 @@ def eval_sketch(model, tasks, logger):
             del tasks[task]
             continue
 
-    probe = LinearProbe(args.dataset, tasks, model, logger)
+    probe = LinearProbe(args.dataset, tasks, model)
     results = probe.eval_task()
     return results
 
-def eval_shoe(model, test_loader, logger):
+def eval_shoe(model, test_loader):
         image_feature_all = []
         image_name = []
         sketch_feature_all = []

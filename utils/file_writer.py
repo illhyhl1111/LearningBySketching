@@ -77,7 +77,14 @@ class FileWriter:
         timestamp: str = None,
         use_tensorboard: bool = True,
         resume: bool = False,
+        lazy_init: bool = False,
     ):
+        if lazy_init:
+            self.before_init = True
+            return
+        else:
+            self.before_init = False
+
         if not xpid:
             # Make unique id.
             xpid = "{proc}_{unixtime}".format(proc=os.getpid(), unixtime=int(time.time()))
@@ -173,19 +180,27 @@ class FileWriter:
 
         save_args(self.basepath, "command.txt")
 
+    def init(self, xpid = None, tag = None, xp_args = None, rootdir = "~/logs", 
+             symlink_to_latest = False, timestamp = None, use_tensorboard = True, resume = False):
+        self.__init__(xpid, tag, xp_args, rootdir, symlink_to_latest, timestamp, use_tensorboard, resume, lazy_init=False)
+
     def log(self, string):
+        assert not self.before_init
         self._logger.info("[%s] %s" % (datetime.now(), string))
 
     def log_dirname(self, string):
+        assert not self.before_init
         self._logger.info("%s (%s)" % (string, self.paths["msg"]))
 
     def scalar_summary(self, tag, value, step):
         """Add a scalar variable to summary."""
+        assert not self.before_init
         if self._summarywriter is not None:
             self._summarywriter.add_scalar(f"{self.xpid}/{tag}", value, step)
 
     def image_summary(self, tag, image, step, dataformats="HWC"):
         """Add an image to summary."""
+        assert not self.before_init
         if self._summarywriter is not None:
             self._summarywriter.add_image(f"{self.xpid}/{tag}", image, step, dataformats=dataformats)
             self._summarywriter.flush()
@@ -193,6 +208,7 @@ class FileWriter:
             pass  # TODO
 
     def figure_summary(self, tag, fig, step):
+        assert not self.before_init
         if self._summarywriter is not None:
             self._summarywriter.add_figure(f"{self.xpid}/{tag}", fig, step)
             self._summarywriter.flush()
@@ -201,10 +217,12 @@ class FileWriter:
 
     def histo_summary(self, tag, values, step):
         """Log a histogram of the tensor of values."""
+        assert not self.before_init
         if self._summarywriter is not None:
             self._summarywriter.add_histogram(f"{self.xpid}/{tag}", values, step, bins="auto")
 
     def close(self, successful: bool = True) -> None:
+        assert not self.before_init
         self.metadata["date_end"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         self.metadata["successful"] = successful
         self._save_metadata()
