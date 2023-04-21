@@ -224,14 +224,19 @@ class LBS(nn.Module):
             use_l1 = True
             self.train_encoder = True
             self.use_mask = False
+
+            self.normalize = Compose([
+                Resize(image_size, interpolation=BICUBIC),
+            ])
+            
         else:
             use_l1 = False
 
-        self.normalize = Compose([
-            Resize(image_size, interpolation=BICUBIC),
-            CenterCrop(image_size),
-            Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-        ])
+            self.normalize = Compose([
+                Resize(image_size, interpolation=BICUBIC),
+                CenterCrop(image_size),
+                Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+            ])            
 
         if self.train_encoder:
             if use_l1:
@@ -486,8 +491,12 @@ class SketchModel(nn.Module):
         lbs_output = self.lbs_model(foreground, background)
         sketch = self.renderer(lbs_output['stroke'], sketch_type)
 
-        for idx, types in enumerate(sketch_type):
-            lbs_output[f'sketch_{types}'] = sketch[idx]
+        if isinstance(sketch_type, list) or isinstance(sketch_type, tuple):
+            for idx, types in enumerate(sketch_type):
+                lbs_output[f'sketch_{types}'] = sketch[idx]
+
+        else:
+            lbs_output[f'sketch_{sketch_type}'] = sketch
 
         return lbs_output
     

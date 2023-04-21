@@ -237,7 +237,10 @@ def embed_loss_fn(model, inputs, labels, q, k):
     img_background = inputs.get("back", None)
     accuracy = torch.zeros(1).to(args.device)
 
-    if args.embed_loss == "ce":
+    if args.embed_loss == "none":
+        loss_embed = torch.zeros(1).to(args.device)
+
+    elif args.embed_loss == "ce":
         loss_embed = criterion_ce(q, labels) * args.lbd_e
         accuracy = (q.argmax(dim=1) == labels).sum() / q.shape[0] * 100
 
@@ -247,12 +250,15 @@ def embed_loss_fn(model, inputs, labels, q, k):
         pos = model.get_representation(inputs["mask"], rep_type=args.rep_type)
         loss_embed = criterion_triplet(F.normalize(rep, dim=1), F.normalize(pos, dim=1), F.normalize(neg, dim=1))
 
+    elif args.embed_loss == "simclr":
+        loss_embed = simclr_loss(q, k.detach(), model.get_queue(), temperature=args.temperature) * args.lbd_e
+
+    elif args.embed_loss == "supcon":
+        loss_embed = supcon_loss(q, model.get_queue(), labels, 
+                                 model.get_queue_l(), temperature=args.temperature) * args.lbd_e
+    
     else:
-        if args.embed_loss == "simclr":
-            loss_embed = simclr_loss(q, k.detach(), model.get_queue(), temperature=args.temperature) * args.lbd_e
-        else:  # supcon
-            loss_embed = supcon_loss(q, model.get_queue(), labels, 
-                                     model.get_queue_l(), temperature=args.temperature) * args.lbd_e
+        raise NotImplementedError
                                         
     return loss_embed, accuracy
 
@@ -304,7 +310,7 @@ def LBS_loss_fn(model, opt, clip_loss_fn, inputs, train_model=True):
         update_model(model, opt, labels, k, loss_LBS)
 
     losses = {
-        "loss_embed": loss_embed,
+        f"loss_embed_{args.embed_loss}": loss_embed,
         "loss_gt_pos": loss_gt_pos,
         "loss_gt_color": loss_gt_color,
         "loss_gt_back": loss_gt_back,
@@ -342,9 +348,9 @@ def l1_loss_fn(model, opt, inputs, train_model=True):
 
     ##### L_{embed} #####
     if args.lbd_e > 0:
-        loss_infonce = embed_loss_fn(model, inputs, labels, q, k)
+        loss_embed, accuracy = embed_loss_fn(model, inputs, labels, q, k)
     else:
-        loss_infonce = torch.zeros(1).to(args.device)
+        loss_embed = torch.zeros(1).to(args.device)
 
     #### L_1 ####
     if args.lbd_p != 0:
@@ -352,11 +358,11 @@ def l1_loss_fn(model, opt, inputs, train_model=True):
     else:
         loss_l1 = torch.zeros(1).to(args.device)
 
-    loss_LBS = loss_l1 + loss_infonce + loss_penalty
+    loss_LBS = loss_l1 + loss_embed + loss_penalty
     losses = {
         "loss_penalty": loss_penalty,
         "loss_l1": loss_l1,
-        "loss_infoNCE": loss_infonce,
+        f"loss_embed_{args.embed_loss}": loss_embed,
         "loss_total": loss_LBS,
         "accuracy": accuracy,
     }

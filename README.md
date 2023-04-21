@@ -1,11 +1,11 @@
 # Learning Geometry-aware Representations by Sketching (CVPR 2023)
 
-[![arXiv](https://img.shields.io/badge/arXiv-2023.TODO-b31b1b.svg)](link)
+[![arXiv](https://img.shields.io/badge/arXiv-2304.08204-b31b1b.svg)](https://arxiv.org/abs/2304.08204)
 
 This repository contains the pytorch code for reproducing our paper "Learning Geometry-aware Representations by Sketching".
 
 <p align="center">
-  <img src="md_images/fig1.svg"  style="width:50%; margin-right:20px"> <img src="md_images/overlayed.png"  width="18%">
+  <img src="md_images/fig1.svg"  style="width:50%; margin-right:40px"> <img src="md_images/overlayed.png"  width="18%">
 </p>
 
 At a high level, our model learns to abstract an image into a stroke-based color sketch that accurately reflects the geometric information (e.g., position, shape, size).

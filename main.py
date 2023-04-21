@@ -124,7 +124,7 @@ def train(model, optimizer, scheduler, loaders, logger, train_with_gt=True):
 
             else:
                 image_grid = image_grids.get("recon")
-                plot_results_l1(model, logger, image_grids, imgs, sketches, epoch)
+                plot_results_l1(model, logger, image_grid, imgs, sketches, epoch)
 
             image_grid = image_grids.get("sequential")
             plot_sequential(model, logger, eval_test_loader, image_grid, epoch)
@@ -145,7 +145,7 @@ def eval_task(model, logger, epoch):
         tasks = ["retrieval"]
     else:
         tasks = ["class"]
-    sketches = eval_sketch(model, tasks)
+    sketches = eval_sketch(model, tasks, logger)
 
     for task, acc in sketches.items():
         logger.scalar_summary(f"eval_{task}", acc, epoch)
@@ -201,7 +201,7 @@ def train_epoch(model, optimizer, scheduler, train_loader, logger, train_with_gt
     for idx, datas in enumerate(train_loader):
         steps = epoch * len(train_loader) + idx
 
-        inputs = unpack_dataloader(datas, train_with_gt)
+        inputs = unpack_dataloader(datas, train_with_gt, model.use_mask)
 
         if train_with_gt:
             _, loss = LBS_loss_fn(model, optimizer, clip_loss_fn, inputs, train_model=True)
@@ -231,7 +231,7 @@ def validation(model, optimizer, val_loader, logger, train_with_gt, epoch):
         if idx == 20:  # validate for 20 steps
             break
 
-        inputs = unpack_dataloader(datas, device, train_with_gt)
+        inputs = unpack_dataloader(datas, train_with_gt, model.use_mask)
         batch_size = inputs["img"].shape[0]
 
         with torch.no_grad():

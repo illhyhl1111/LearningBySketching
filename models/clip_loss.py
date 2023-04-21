@@ -11,13 +11,13 @@ from utils.shared import args
 class Loss(nn.Module):
     def __init__(self):
         super(Loss, self).__init__()
-        self.percep_loss = args.percep_loss
-
+        # self.percep_loss = args.percep_loss
         # self.train_with_clip = args.train_with_clip
         # self.clip_weight = args.clip_weight
         # self.start_clip = args.start_clip
         # self.clip_conv_loss = args.clip_conv_loss
         # self.clip_text_guide = args.clip_text_guide
+        self.percep_loss = 'none'
         self.train_with_clip = 0
         self.clip_weight = 0
         self.start_clip = 0

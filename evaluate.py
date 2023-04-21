@@ -70,11 +70,12 @@ class RepLabelPair(Dataset):
 
 
 class LinearProbe():
-    def __init__(self, data, tasks, model):
+    def __init__(self, data, tasks, model, logger):
         self.model = model
         self.device = args.device
         self.data = data
         self.tasks = tasks
+        self.logger = logger
 
         self.task_bin = OrderedDict()
         self.label_fn_dict = OrderedDict()
@@ -194,7 +195,7 @@ class LinearProbe():
             param_group['lr'] = lr
         
     def eval_task(self):
-        print(f'evaluating {self.data}, {self.tasks}')
+        self.logger.log(f'evaluating {self.data}, {self.tasks}')
         tic = time.time()
         max_acc = {task: 0 for task in self.tasks}
 
@@ -202,7 +203,7 @@ class LinearProbe():
             z_size = self.train_set.dim_len()
             total_num = sum(self.task_bin.values())
             if self.two_layer:
-                print('using 2 layer classifier')
+                self.logger.log('using 2 layer classifier')
                 linear = nn.Sequential(
                     nn.Linear(z_size, z_size),
                     nn.ReLU(),
@@ -258,16 +259,17 @@ class LinearProbe():
                         log += f'{task}: {acc[task]:.2f}%, '
 
                 print(log, end='\r')
+            self.logger.log(log)
 
         result = max_acc
         result_log = f'\nevaluation results for {self.data}\n'
         for task, acc in max_acc.items():
             result_log += f'{task}: {acc:.3f}%, '
-        print(f'{result_log}\nelapsed time: {time.time()-tic:.2f}s')
+        self.logger.log(f'{result_log}\nelapsed time: {time.time()-tic:.2f}s')
         return result
 
 
-def eval_sketch(model, tasks):
+def eval_sketch(model, tasks, logger):
     for task in tasks:
         if task == 'retrieval':
             _, _, _, test_set, _, _ = get_dataset(args.dataset, args.data_root, eval_only=True)
@@ -276,11 +278,11 @@ def eval_sketch(model, tasks):
             del tasks[task]
             continue
 
-    probe = LinearProbe(args.dataset, tasks, model)
+    probe = LinearProbe(args.dataset, tasks, model, logger)
     results = probe.eval_task()
     return results
 
-def eval_shoe(model, test_loader):
+def eval_shoe(model, test_loader, logger):
         image_feature_all = []
         image_name = []
         sketch_feature_all = []
@@ -319,8 +321,8 @@ def eval_shoe(model, test_loader):
         top1 = rank.le(1).sum().numpy() / rank.shape[0]
         top10 = rank.le(10).sum().numpy() / rank.shape[0]
 
-        print('Time:{}'.format(time.time() - start_time))
-        print(f'{top1}, {top10}')
+        logger.log('Eval time:{}'.format(time.time() - start_time))
+        logger.log(f'Top1: {top1}, Top10: {top10}')
         return {'retrieval_top1': top1, 'retrieval_top10': top10}
 
 
