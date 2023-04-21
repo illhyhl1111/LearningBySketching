@@ -145,6 +145,8 @@ def parse_arguments():
     
     if args.embed_loss == 'none':
         args.lbd_e = 0.0
+        if args.rep_type == 'LBS+':     # disable z_e for final representation
+            args.rep_type = 'LBS'
     
     if not args.no_cuda:
         args.device = torch.device(

@@ -97,7 +97,6 @@ def train(model, optimizer, scheduler, loaders, train_with_gt=True):
             train_epoch(model, optimizer, scheduler, train_loader, train_with_gt, epoch)
 
         ### validation
-        logger.log_dirname(f"Epoch {epoch}")
         model.eval()
 
         if epoch % args.validate_every == 0:

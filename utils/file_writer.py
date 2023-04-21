@@ -185,8 +185,10 @@ class FileWriter:
         self.__init__(xpid, tag, xp_args, rootdir, symlink_to_latest, timestamp, use_tensorboard, resume, lazy_init=False)
 
     def log(self, string):
-        assert not self.before_init
-        self._logger.info("[%s] %s" % (datetime.now(), string))
+        if self.before_init:
+            print(string)
+        else:
+            self._logger.info("[%s] %s" % (datetime.now(), string))
 
     def log_dirname(self, string):
         assert not self.before_init

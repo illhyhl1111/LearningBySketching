@@ -2,7 +2,9 @@ dataset: geoclidean_constraints_positive
 lr: 0.001
 epochs: 5000
 batch: 128
-rep_type: LBS
+rep_type: LBS+      # z_e will not be used automatically if embed_loss is 'none'
+embed_loss: none
+
 enable_color: False
 num_strokes: 4
 num_background: 0

@@ -1,7 +1,8 @@
 dataset: stl10
 epochs: 50
 batch: 32
-rep_type: LBS
+rep_type: LBS+      # z_e will not be used automatically if embed_loss is 'none'
+embed_loss: none
 
 enable_color: True
 num_strokes: 20

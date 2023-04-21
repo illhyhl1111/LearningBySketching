@@ -2,7 +2,8 @@ dataset: mnist_30,45_0,90
 lr: 0.001
 epochs: 200
 batch: 32
-rep_type: LBS
+rep_type: LBS+      # z_e will not be used automatically if embed_loss is 'none'
+embed_loss: none
 
 enable_color: False
 enable_radius: True
