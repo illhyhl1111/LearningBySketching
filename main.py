@@ -18,7 +18,7 @@ from utils.shared import stroke_config as config
 
 clip_loss_fn = None
 
-def unpack_dataloader(datas, train_with_gt=True, use_mask=False):
+def unpack_dataloader(datas, train_with_gt=True):
     assert (len(datas) == 3 and train_with_gt) or (len(datas) == 2 and not train_with_gt)
 
     if train_with_gt:
@@ -26,10 +26,10 @@ def unpack_dataloader(datas, train_with_gt=True, use_mask=False):
         img, mask, pos, color = imgs_q
         img_k, mask_k, pos_k, color_k = imgs_k
 
-        if not use_mask:
-            mask_ = torch.ones_like(mask)
-        else:
+        if args.dataset == 'stl10':
             mask_ = mask
+        else:
+            mask_ = torch.ones_like(mask)
 
         return {
             "img": img.to(device, non_blocking=True),
@@ -198,7 +198,7 @@ def train_epoch(model, optimizer, scheduler, train_loader, train_with_gt, epoch)
     for idx, datas in enumerate(train_loader):
         steps = epoch * len(train_loader) + idx
 
-        inputs = unpack_dataloader(datas, train_with_gt, model.use_mask)
+        inputs = unpack_dataloader(datas, train_with_gt)
 
         if train_with_gt:
             _, loss = LBS_loss_fn(model, optimizer, clip_loss_fn, inputs, train_model=True)
@@ -228,7 +228,7 @@ def validation(model, optimizer, val_loader, train_with_gt, epoch):
         if idx == 20:  # validate for 20 steps
             break
 
-        inputs = unpack_dataloader(datas, train_with_gt, model.use_mask)
+        inputs = unpack_dataloader(datas, train_with_gt)
         batch_size = inputs["img"].shape[0]
 
         with torch.no_grad():

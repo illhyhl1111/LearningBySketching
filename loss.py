@@ -233,8 +233,6 @@ def guide_loss_fn(inputs, lbs_output):
 
 def embed_loss_fn(model, inputs, labels, q, k):
     img = inputs["img"]
-    img_foreground = inputs.get("fore", None)
-    img_background = inputs.get("back", None)
     accuracy = torch.zeros(1).to(args.device)
 
     if args.embed_loss == "none":
@@ -245,7 +243,7 @@ def embed_loss_fn(model, inputs, labels, q, k):
         accuracy = (q.argmax(dim=1) == labels).sum() / q.shape[0] * 100
 
     elif args.embed_loss == "triplet":
-        rep = model.get_representation(img, img_foreground, img_background, rep_type=args.rep_type)
+        rep = model.get_representation(img, rep_type=args.rep_type)
         neg = torch.cat([rep[1:], rep[:1]], dim=0)
         pos = model.get_representation(inputs["mask"], rep_type=args.rep_type)
         loss_embed = criterion_triplet(F.normalize(rep, dim=1), F.normalize(pos, dim=1), F.normalize(neg, dim=1))
@@ -265,15 +263,11 @@ def embed_loss_fn(model, inputs, labels, q, k):
 
 def LBS_loss_fn(model, opt, clip_loss_fn, inputs, train_model=True):
     img = inputs["img"]
-    img_mask = inputs["mask"]
     img_foreground = inputs["fore"]
-
     img_k = inputs["img_k"]
-    img_mask_k = inputs["mask_k"]
-
     labels = inputs["label"]
 
-    lbs_output = model(img, img_mask)
+    lbs_output = model(img)
     lbs_output['intermediate'] = model.get_intermediate_strokes()
     q = lbs_output['projection']
     sketch_color = lbs_output['sketch_color']
@@ -282,7 +276,7 @@ def LBS_loss_fn(model, opt, clip_loss_fn, inputs, train_model=True):
 
 
     if args.embed_loss in ['simclr', 'supcon']:
-        k = model.get_key_value(img_k, img_mask_k)
+        k = model.get_key_value(img_k)
     else:
         k = None
 

@@ -1,7 +1,6 @@
 lr: 0.0002
 seed: 0
 prev_weight: 1
-no_mask: True
 hungarian: True
 rep_type: LBS
 

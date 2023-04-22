@@ -63,7 +63,7 @@ def parse_arguments():
     parser.add_argument('--lbd_p', default=1.0, type=float, help='weight for L_percept')
     parser.add_argument('--lbd_e', default=1.0, type=float, help='weight for L_embed')
     parser.add_argument('--epochs', default=500, type=int)
-    parser.add_argument('--dataset', type=str, default='sketch')
+    parser.add_argument('--dataset', type=str, default='stl10')
 
     parser.add_argument('--n_hidden', default=512, type=int)
     parser.add_argument('--n_embedding', default=512, type=int)
@@ -75,7 +75,6 @@ def parse_arguments():
     parser.add_argument('--embed_loss', type=str, choices=['none', 'ce', 'simclr', 'supcon', 'triplet'], default='none')
     parser.add_argument('--train_encoder', action='store_true')
     parser.add_argument('--rep_type', type=str, default='LBS+')
-    parser.add_argument('--no_mask', action='store_true')
 
     # =================================
     # ========== MoCo Options =========

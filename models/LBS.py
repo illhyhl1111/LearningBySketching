@@ -218,12 +218,10 @@ class LBS(nn.Module):
         self.rep_type = args.rep_type
         image_size = args.image_size
         self.train_encoder = args.train_encoder
-        self.use_mask = not args.no_mask
-        
+
         if args.dataset.startswith('mnist') or args.dataset.startswith('geoclidean'):
             use_l1 = True
             self.train_encoder = True
-            self.use_mask = False
 
             self.normalize = Compose([
                 Resize(image_size, interpolation=BICUBIC),
@@ -335,15 +333,11 @@ class LBS(nn.Module):
 
         return torch.cat(rep_list, dim=1)
 
-    def forward(self, image, masked):
+    def forward(self, image):
         image = self.normalize(image)
-        if self.use_mask:
-            masked = self.normalize(masked)
 
         if self.train_encoder:
             cnn_feature = self.cnn_encoder(image)
-            if self.use_mask:
-                masked_feature = self.cnn_encoder(masked)
         else:
             global CLIP_encoder
             def forward_clip(image):
@@ -370,11 +364,6 @@ class LBS(nn.Module):
             with torch.no_grad():
                 x = forward_clip(image)
                 cnn_feature = x.view(*x.shape[:2], 7, 7)
-                if self.use_mask:
-                    masked_feature = forward_clip(masked)
-        
-        if self.use_mask:
-            cnn_feature = torch.cat([cnn_feature, masked_feature], dim=1)
 
         strokes = self.stroke_generator(cnn_feature)
         stroke_vector = self.vectorize_stroke(strokes, flatten=False)
@@ -454,9 +443,9 @@ class MoCoLBS(LBS):
         assert self.queue_l is not None
         return self.queue_l.q
     
-    def get_key_value(self, image, masked):
+    def get_key_value(self, image):
         with torch.no_grad():
-            k = self.key_encoder(image, masked)['projection']
+            k = self.key_encoder(image)['projection']
         return k
 
 
@@ -471,24 +460,8 @@ class SketchModel(nn.Module):
 
         self.renderer = Renderer(args.image_size, min(64, args.image_size))
 
-        self.use_mask = self.lbs_model.use_mask
-
-    def get_masked_img(self, image, mask=None):
-        if self.use_mask:
-            if mask is None:
-                mask = sketch_utils.mask_image(image)
-            foreground = image * mask + (1 - mask)
-            background = image * (1 - mask) + mask
-        else:
-            foreground = image
-            background = None
-        
-        return foreground, background
-
-    def forward(self, image, mask=None, sketch_type=['color', 'black', 'background']):
-        foreground, background = self.get_masked_img(image, mask)
-            
-        lbs_output = self.lbs_model(foreground, background)
+    def forward(self, image, sketch_type=['color', 'black', 'background']):
+        lbs_output = self.lbs_model(image)
         sketch = self.renderer(lbs_output['stroke'], sketch_type)
 
         if isinstance(sketch_type, list) or isinstance(sketch_type, tuple):
@@ -503,18 +476,14 @@ class SketchModel(nn.Module):
     def get_intermediate_strokes(self):
         return self.lbs_model.stroke_generator.get_intermediate_strokes()
 
-    def get_key_value(self, image, mask=None):
-        foreground, background = self.get_masked_img(image, mask)
-
+    def get_key_value(self, image):
         if isinstance(self.lbs_model, MoCoLBS):
-            return self.lbs_model.get_key_value(foreground, background)
+            return self.lbs_model.get_key_value(image)
         
         return None
 
     def sketch_image(self, image, sketch_type='color'):
-        foreground, background = self.get_masked_img(image, None, None)
-
-        stroke = self.lbs_model(foreground, background)['stroke']
+        stroke = self.lbs_model(image)['stroke']
         return self.rasterize_stroke(stroke, sketch_type)
 
     def set_progress(self, progress):
@@ -545,12 +514,8 @@ class SketchModel(nn.Module):
         assert self.lbs_model.queue_l is not None
         return self.lbs_model.queue_l.q
 
-    def get_representation(self, image, mask=None, rep_type='LBS+'):
-        if rep_type == 'full':
-            rep_type = ''
-
-        foreground, background = self.get_masked_img(image, mask)
-        lbs_output = self.lbs_model(foreground, background)
+    def get_representation(self, image, rep_type='LBS+'):
+        lbs_output = self.lbs_model(image)
         z_e = lbs_output['z_e']
         z_p = lbs_output['z_p']
         z_h = lbs_output['z_h']
@@ -572,12 +537,10 @@ class SketchModel(nn.Module):
                     image = dataset[i][0].to(device).unsqueeze(0)
                 else:
                     image = dataset[i].to(device).unsqueeze(0)
-                foreground, background = self.get_masked_img(image, None)
-
-                grid.append(foreground)
+                grid.append(image)
 
                 with torch.no_grad():
-                    stroke = self.lbs_model(foreground, background)['stroke']
+                    stroke = self.lbs_model(image)['stroke']
                 p, s, c, b = self.renderer.reshape_params(stroke)
 
                 for j in range(p.shape[1]):

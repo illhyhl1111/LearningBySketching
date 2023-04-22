@@ -12,7 +12,5 @@ lbd_g: 1
 lbd_p: 1
 lbd_e: 0
 
-no_mask: False
-
 xpid: STL10
 comment: LBS
