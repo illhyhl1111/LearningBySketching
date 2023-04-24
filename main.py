@@ -252,16 +252,16 @@ def validation(model, optimizer, val_loader, train_with_gt, epoch):
 
 
 def main():
-    args = argparser.parse_arguments()
+    args_ = argparser.parse_arguments()
 
-    train_set, val_set, eval_train_set, eval_test_set, image_shape, class_num = get_dataset(args.dataset, data_root=args.data_root)
+    train_set, val_set, eval_train_set, eval_test_set, image_shape, class_num = get_dataset(args_.dataset, data_root=args_.data_root)
 
-    args.image_size = image_shape[1]
-    args.image_num_channel = image_shape[0]
-    args.class_num = class_num
-    stroke_config = argparser.get_stroke_config(args)
+    args_.image_size = image_shape[1]
+    args_.image_num_channel = image_shape[0]
+    args_.class_num = class_num
+    stroke_config = argparser.get_stroke_config(args_)
 
-    update_args(args)
+    update_args(args_)
     update_config(stroke_config)
 
     global device
@@ -280,7 +280,7 @@ def main():
     scheduler = CosineAnnealingWarmUpRestarts(optimizer, eta_max=args.lr, T_0=t_0, T_mult=1, T_up=t_0 // 20, gamma=0.5)
 
     if args.load_path is not None:
-        checkpoint = torch.load(os.path.join(args.load_path, "enc.pt"))
+        checkpoint = torch.load(os.path.join(args.load_path, "model.pt"))
         model.load_state_dict(checkpoint)
         checkpoint_opt = torch.load(os.path.join(args.load_path, "optim.pt"))["optim"]
         optimizer.load_state_dict(checkpoint_opt)

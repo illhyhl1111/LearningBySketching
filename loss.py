@@ -174,7 +174,7 @@ def guide_loss_fn(inputs, lbs_output):
     img_background = inputs.get("back", None)
     stroke = lbs_output['stroke']
     intermediate = lbs_output['intermediate']
-    sketch_black = lbs_output['sketch_black']
+    sketch_black = lbs_output['sketch_background']
 
     loss_gt_pos = torch.zeros(1).to(args.device)
     loss_gt_color = torch.zeros(1).to(args.device)
