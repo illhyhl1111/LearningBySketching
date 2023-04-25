@@ -149,11 +149,10 @@ class LinearProbe():
 
             task_dict = OrderedDict()
             for position in ['rightmost', 'leftmost', 'topmost', 'bottommost']:
-                task_dict[f'{position}_color'] = (lambda l: l[0][torch.arange(l[0].shape[0]), pos_to_idx[position](l), 0], 8)
-                task_dict[f'{position}_size'] = (lambda l: l[0][torch.arange(l[0].shape[0]), pos_to_idx[position](l), 1], 2)
-                task_dict[f'{position}_shape'] = (lambda l: l[0][torch.arange(l[0].shape[0]), pos_to_idx[position](l), 2], 3)
-                task_dict[f'{position}_material'] = (lambda l: l[0][torch.arange(l[0].shape[0]), pos_to_idx[position](l), 3], 2)
-                # task_dict[f'{position}_pos'] = (lambda l: l[1][torch.arange(l[1].shape[0]), pos_to_idx[position](l)][:, [4, 5]], 2)
+                task_dict[f'{position}_color'] = (lambda l, pos=position: l[0][torch.arange(l[0].shape[0]), pos_to_idx[pos](l), 0], 8)
+                task_dict[f'{position}_size'] = (lambda l, pos=position: l[0][torch.arange(l[0].shape[0]), pos_to_idx[pos](l), 1], 2)
+                task_dict[f'{position}_shape'] = (lambda l, pos=position: l[0][torch.arange(l[0].shape[0]), pos_to_idx[pos](l), 2], 3)
+                task_dict[f'{position}_material'] = (lambda l, pos=position: l[0][torch.arange(l[0].shape[0]), pos_to_idx[pos](l), 3], 2)
 
             def shift_right_object(l, shift):
                 right_idx = pos_to_idx['rightmost'](l)

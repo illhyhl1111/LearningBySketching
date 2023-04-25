@@ -191,19 +191,17 @@ def guide_loss_fn(inputs, lbs_output):
 
     ### use L1 loss for background strokes
     if n_back > 0:
-        loss_gt_back = criterion_l1(sketch_black, img_background) * args.lbd_g
+        loss_gt_back = criterion_l1(sketch_black, img_background)
     else:
         loss_gt_back = torch.zeros(1).to(args.device)
 
     if args.hungarian:
-        loss_gt_pos_, loss_gt_color_, _ = hungarian_loss(stroke, gt)
-        loss_gt_pos += loss_gt_pos_ * args.lbd_g
-        loss_gt_color += loss_gt_color_ * args.lbd_g
+        loss_gt_pos, loss_gt_color, _ = hungarian_loss(stroke, gt)
 
     else:
-        loss_gt_pos += criterion_l1(stroke["position"][:, :-n_back], gt["position"]) * args.lbd_g
+        loss_gt_pos = criterion_l1(stroke["position"][:, :-n_back], gt["position"])
         if config.enable_c:
-            loss_gt_color += criterion_l1(stroke["color"][:, :-n_back], gt["color"]) * args.lbd_g
+            loss_gt_color = criterion_l1(stroke["color"][:, :-n_back], gt["color"])
 
     ### progressive optimization process
     if args.prev_weight > 0:
@@ -220,13 +218,13 @@ def guide_loss_fn(inputs, lbs_output):
 
             if args.hungarian:
                 loss_gt_pos_, loss_gt_color_, _ = hungarian_loss(stroke, gt)
-                loss_gt_pos += loss_gt_pos_ * args.lbd_g * args.prev_weight
-                loss_gt_color += loss_gt_color_ * args.lbd_g * args.prev_weight
+                loss_gt_pos += loss_gt_pos_ * args.prev_weight
+                loss_gt_color += loss_gt_color_ * args.prev_weight
             else:
-                loss_gt_pos += criterion_l1(stroke["position"][:, :-n_back], pos) * args.lbd_g * args.prev_weight
+                loss_gt_pos += criterion_l1(stroke["position"][:, :-n_back], pos) * args.prev_weight
 
                 if config.enable_c:
-                   loss_gt_color += criterion_l1(stroke["color"][:, :-n_back], color) * args.lbd_g * args.prev_weight
+                   loss_gt_color += criterion_l1(stroke["color"][:, :-n_back], color) * args.prev_weight
 
     return loss_gt_pos, loss_gt_color, loss_gt_back
 
@@ -239,7 +237,7 @@ def embed_loss_fn(model, inputs, labels, q, k):
         loss_embed = torch.zeros(1).to(args.device)
 
     elif args.embed_loss == "ce":
-        loss_embed = criterion_ce(q, labels) * args.lbd_e
+        loss_embed = criterion_ce(q, labels)
         accuracy = (q.argmax(dim=1) == labels).sum() / q.shape[0] * 100
 
     elif args.embed_loss == "triplet":
@@ -249,11 +247,11 @@ def embed_loss_fn(model, inputs, labels, q, k):
         loss_embed = criterion_triplet(F.normalize(rep, dim=1), F.normalize(pos, dim=1), F.normalize(neg, dim=1))
 
     elif args.embed_loss == "simclr":
-        loss_embed = simclr_loss(q, k.detach(), model.get_queue(), temperature=args.temperature) * args.lbd_e
+        loss_embed = simclr_loss(q, k.detach(), model.get_queue(), temperature=args.temperature)
 
     elif args.embed_loss == "supcon":
         loss_embed = supcon_loss(q, model.get_queue(), labels, 
-                                 model.get_queue_l(), temperature=args.temperature) * args.lbd_e
+                                 model.get_queue_l(), temperature=args.temperature)
     
     else:
         raise NotImplementedError
@@ -283,12 +281,16 @@ def LBS_loss_fn(model, opt, clip_loss_fn, inputs, train_model=True):
     ##### L_{embed} #####
     if args.lbd_e > 0:
         loss_embed, accuracy = embed_loss_fn(model, inputs, labels, q, k)
+        loss_embed *= args.lbd_e
     else:
         loss_embed = torch.zeros(1).to(args.device)
         accuracy = torch.zeros(1).to(args.device)
 
     ##### L_{guide} #####
     loss_gt_pos, loss_gt_color, loss_gt_back = guide_loss_fn(inputs, lbs_output)
+    loss_gt_pos *= args.lbd_g
+    loss_gt_color *= args.lbd_g
+    loss_gt_back *= args.lbd_g
     
     ##### L_{percept} #####
     if args.lbd_p != 0:
@@ -343,6 +345,7 @@ def l1_loss_fn(model, opt, inputs, train_model=True):
     ##### L_{embed} #####
     if args.lbd_e > 0:
         loss_embed, accuracy = embed_loss_fn(model, inputs, labels, q, k)
+        loss_embed *= args.lbd_e
     else:
         loss_embed = torch.zeros(1).to(args.device)
 
