@@ -4,8 +4,8 @@
 
 This repository contains the pytorch code for reproducing our paper "Learning Geometry-aware Representations by Sketching".
 
-<p align="center">
-  <img src="md_images/fig1.svg"  style="width:50%; margin-right:40px"> <img src="md_images/overlayed.png"  width="18%">
+<p align="center"; style="color:blue">
+  <img src="md_images/fig1.svg"  style="width:50%; margin-right:40px"> $\;$ <img src="md_images/overlayed.png" width="18%">
 </p>
 
 At a high level, our model learns to abstract an image into a stroke-based color sketch that accurately reflects the geometric information (e.g., position, shape, size).
