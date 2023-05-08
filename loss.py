@@ -10,7 +10,6 @@ from utils.shared import stroke_config as config
 criterion_l1 = torch.nn.L1Loss().cuda()
 criterion_ce = torch.nn.CrossEntropyLoss().cuda()
 criterion_pixel_ = torch.nn.L1Loss(reduction="none").cuda()
-criterion_triplet = torch.nn.TripletMarginLoss(margin=0.5)
 
 
 def criterion_pixel(inputs, targets):
@@ -238,16 +237,6 @@ def embed_loss_fn(model, inputs, labels, q, k):
     elif args.embed_loss == "ce":
         loss_embed = criterion_ce(q, labels)
         accuracy = (q.argmax(dim=1) == labels).sum() / q.shape[0] * 100
-
-    elif args.embed_loss == "triplet":
-        rep = model.get_representation(inputs["img"], rep_type='h')
-        neg = torch.cat([rep[1:], rep[:1]], dim=0)
-        pos = model.get_representation(inputs["mask"], rep_type='h')
-        # rep = F.normalize(q, dim=1)
-        # neg = torch.cat([rep[1:], rep[:1]], dim=0)
-        # pos = model.get_projection(inputs["mask"])
-        # pos = F.normalize(pos, dim=1)
-        loss_embed = criterion_triplet(rep, pos, neg)
 
     elif args.embed_loss == "simclr":
         loss_embed = simclr_loss(q, k.detach(), model.get_queue(), temperature=args.temperature)

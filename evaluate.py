@@ -268,60 +268,9 @@ class LinearProbe():
 
 
 def eval_sketch(model, tasks):
-    if args.dataset == 'shoe':
-        assert tasks == ['retrieval']
-        _, _, _, test_set, _, _ = get_dataset(args.dataset, args.data_root, eval_only=True)
-        test_loader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=8)
-        return eval_shoe(model, test_loader)
-
-    for task in tasks:
-        probe = LinearProbe(args.dataset, tasks, model)
-        results = probe.eval_task()
+    probe = LinearProbe(args.dataset, tasks, model)
+    results = probe.eval_task()
     return results
-
-def eval_shoe(model, test_loader):
-        image_feature_all = []
-        image_name = []
-        sketch_feature_all = []
-        sketch_name = []
-        start_time = time.time()
-
-        for (img, sketch, _, _), _, labels in test_loader:
-            positive_feature = model.get_representation(img.to(args.device), rep_type=args.rep_type)
-            sketch_feature = model.get_representation(sketch.to(args.device), rep_type=args.rep_type)
-            
-            sketch_feature_all.append(sketch_feature)
-            sketch_name.append(labels)
-            image_feature_all.append(positive_feature)
-            image_name.append(labels)
-            # for i_num, positive_name in enumerate(sanpled_batch['positive_path']):
-            #     if positive_name not in Image_Name:
-            #         Image_Name.append(sanpled_batch['positive_path'][i_num])
-            #         Image_Feature_ALL.append(positive_feature[i_num])
-
-        sketch_name = torch.cat(sketch_name, dim=0)
-        sketch_feature_all = torch.cat(sketch_feature_all, dim=0)
-        image_name = torch.cat(image_name, dim=0)
-        image_feature_all = torch.cat(image_feature_all, dim=0)
-
-        rank = torch.zeros(len(sketch_name))
-
-        for num, sketch_feature in enumerate(sketch_feature_all):
-            position_query = num
-
-            distance = F.pairwise_distance(sketch_feature.unsqueeze(0), image_feature_all)
-            target_distance = F.pairwise_distance(sketch_feature.unsqueeze(0),
-                                                  image_feature_all[position_query].unsqueeze(0))
-
-            rank[num] = distance.le(target_distance).sum()
-
-        top1 = rank.le(1).sum().numpy() / rank.shape[0]
-        top10 = rank.le(10).sum().numpy() / rank.shape[0]
-
-        logger.log('Eval time:{}'.format(time.time() - start_time))
-        logger.log(f'Top1: {top1}, Top10: {top10}')
-        return {'retrieval_top1': top1, 'retrieval_top10': top10}
-
 
 def load_model_with_args(eval_args):
     save_path = None
@@ -389,8 +338,6 @@ def set_tasks_from_dataset(eval_args):
         tasks += ['rightmost_shift', 'rightmost_third']
     elif args.dataset.startswith('mnist'):
         tasks = ['class']
-    elif args.dataset == 'shoe':
-        tasks = ['retrieval']
     else:
         tasks = ['class']
     return tasks

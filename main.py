@@ -76,10 +76,7 @@ def train(model, optimizer, scheduler, loaders, train_with_gt=True):
     clip_loss_fn = CLIPLoss()
 
     if train_with_gt:
-        if args.dataset == "shoe":
-            image_grids["recon"] = ImageGrid(num_img=10, nrow=4)
-        else:
-            image_grids["recon"] = ImageGrid(num_img=10, nrow=6)
+        image_grids["recon"] = ImageGrid(num_img=10, nrow=6)
         image_grids["sequential"] = ImageGrid(num_img=config.n_lines + 1, nrow=5)
     else:
         image_grids["recon"] = ImageGrid(num_img=8, nrow=2)
@@ -138,8 +135,6 @@ def train(model, optimizer, scheduler, loaders, train_with_gt=True):
 def eval_task(model, epoch):
     if args.dataset.startswith("clevr"):
         tasks = ["rightmost_color", "rightmost_size", "rightmost_shape", "rightmost_material"]
-    elif args.dataset == "shoe":
-        tasks = ["retrieval"]
     else:
         tasks = ["class"]
     sketches = eval_sketch(model, tasks)
@@ -179,15 +174,10 @@ def plot_results_gt(model, image_grid, inputs, sketches, epoch):
     }
     gt_sketch = model.rasterize_stroke(padded_stroke, 'color')
 
-    if args.dataset == "shoe":
-        stacked_results = torch.stack([
-                        inputs["img"], inputs["mask"], gt_sketch, sketches["sketch_color"],
-                        ], dim=1).flatten(0, 1)
-    else:
-        stacked_results = torch.stack([
-                        inputs["img"], inputs["back"], gt_sketch,
-                        sketches["sketch_color"], sketches["sketch_black"], sketches["sketch_background"],
-                        ], dim=1).flatten(0, 1)
+    stacked_results = torch.stack([
+        inputs["img"], inputs["back"], gt_sketch,
+        sketches["sketch_color"], sketches["sketch_black"], sketches["sketch_background"],
+    ], dim=1).flatten(0, 1)
 
     img_grid = image_grid.update(stacked_results)
     logger.figure_summary("reconstruction", img_grid, epoch)   

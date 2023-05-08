@@ -72,7 +72,7 @@ def parse_arguments():
 
     parser.add_argument('--hungarian', action='store_true')
     parser.add_argument('--prev_weight', type=float, default=0.0)
-    parser.add_argument('--embed_loss', type=str, choices=['none', 'ce', 'simclr', 'supcon', 'triplet'], default='none')
+    parser.add_argument('--embed_loss', type=str, choices=['none', 'ce', 'simclr', 'supcon'], default='none')
     parser.add_argument('--train_encoder', action='store_true')
     parser.add_argument('--rep_type', type=str, default='LBS+')
 

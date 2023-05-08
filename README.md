@@ -20,7 +20,7 @@ We use these parameterized vectors directly as a compact representation of an im
 An overview of LBS(Learning by Sketching), including a CNN-based encoder, Transformer-based Stroke Generator, a Stroke Embedding Network and a Differentiable Rasterizer.
 
 For training, we use CLIP-based perceptual loss, a guidance stroke from optimization-based generation ([CLIPasso](https://github.com/yael-vinker/CLIPasso)).
-You can optionally train with an additional loss function specified by the `--embed_loss` argument (`choices=['ce', 'simclr', 'supcon', 'triplet']`).
+You can optionally train with an additional loss function specified by the `--embed_loss` argument (`choices=['ce', 'simclr', 'supcon']`).
 
 
 ## Dependencies
@@ -56,12 +56,6 @@ By default, the code assumes that all the datasets are located under `./data/`. 
   * extract the contents (images, scenes folder) under `--data_root/clevr`.
 * **Geoclidean dataset**: [download](https://drive.google.com/file/d/1BbOrU95_bQw4W4yXnnsxPJ58Y7jY2C9q/view?usp=share_link) our realized samples of Geoclidean dataset based on [Geoclidean](https://github.com/joyhsu0504/geoclidean_framework) repo.
   * extract the contents (constraints, elements folder) under `--data_root/geoclidean`.
-* **QMUL-ShoeV2 dataset**: download dataset from [Baseline_FGSBIR](https://github.com/AyanKumarBhunia/Baseline_FGSBIR)
-  * ``` 
-    git clone https://github.com/AyanKumarBhunia/Baseline_FGSBIR.git
-    mv Baseline_FGSBIR/Dataset/ShoeV2 (--data_root)/ShoeV2
-    rm -rf Baseline_FGSBIR
-    ```
 The structure should be as:
 ```
 --data_dir
@@ -75,27 +69,22 @@ The structure should be as:
 │   │   │   └── ...
 │   │   └── test
 │   └── README.txt
-├── geoclidean
-│   ├── constraints
-│   └── elements
-│       ├── train
-│       │   ├── triangle
-│       │   │   ├── in_xxx_fin.png
-│       │   │   └── ...
-│       │   └── ...
-│       └── test
-└── ShoeV2        
-    ├── photo
-    │   ├── xxxxxxxxxx.png
-    │   └── ...
-    └── ShoeV2_Coordinate
+└── geoclidean
+    ├── constraints
+    └── elements
+        ├── train
+        │   ├── triangle
+        │   │   ├── in_xxx_fin.png
+        │   │   └── ...
+        │   └── ...
+        └── test
 ```
 
 ## Scripts
 
 ### Generate guidance stroke
 
-To train our model with the CLEVR, STL-10, and QMUL-ShoeV2 datasets, you must first generate guidance strokes.
+To train our model with the CLEVR and STL-10 datasets, you must first generate guidance strokes.
 
 1. You can generate the guidance strokes with:
    - TODO
@@ -103,7 +92,6 @@ To train our model with the CLEVR, STL-10, and QMUL-ShoeV2 datasets, you must fi
 2. You can download pre-generated strokes from:
    - CLEVR: [link](https://drive.google.com/file/d/1n7cjl5yGaUaeXKURJMwTWGeID-kzKqv_/view?usp=share_link)
    - STL-10: [link](https://drive.google.com/file/d/1UTssJZ89kueJhXubv0s7HPveImBlbOb2/view?usp=share_link)
-   - QMUL-ShoeV2: [link](https://drive.google.com/file/d/1h9lhU4IPO31pBDSLNwGBjZZ3bXZqOWeU/view?usp=share_link)
   
     put the downloaded files into `gt_sketches/`
 
@@ -124,8 +112,6 @@ python main.py --data_root /your/path/to/dir --config_path config/clevr.yaml
 # STL-10
 python main.py --data_root /your/path/to/dir --config_path config/stl10.yaml 
 
-# QMUL-ShoeV2
-python main.py --data_root /your/path/to/dir --config_path config/shoe.yaml 
 ```
 
 Optional arguments:
@@ -137,7 +123,7 @@ Optional arguments:
   * `LBS+`: $(z_e, z_p, z_h)$
   * `LBS`: $(z_e, z_p)$
   * combinations of 'e', 'p', 'h': Vector concatenating $z_e, z_p, z_h$, respectively. ex) 'ph' -> $(z_p, z_h)$
-* `--embed_loss`: type of $\mathcal{L}_{embed}$, choices: ['none', 'ce', 'simclr', 'supcon', 'triplet']
+* `--embed_loss`: type of $\mathcal{L}_{embed}$, choices: ['none', 'ce', 'simclr', 'supcon']
 * `--lbd_g, --lbd_p, --lbd_e`: weights of loss $\mathcal{L}_{guide}, \mathcal{L}_{percept}, \mathcal{L}_{embed}$, respectively
 
 ### Evaluation

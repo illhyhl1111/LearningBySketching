@@ -23,21 +23,21 @@ class SketchDataset(Dataset):
     def __init__(
         self, sketch_root, data_root, image_size, data_type="stl10", split="train+unlabeled", augment=True, label_fn=lambda x: x
     ):
-        """Initialize SketchDataset with the original image dataseet and pre-generated ground truth sketch
+        """Initialize SketchDataset with the original image dataset and pre-generated ground truth sketch
 
         Args:
             sketch_root (path): Root directory of the pre-generated ground truth sketch data
             data_root (path): Root directory of the original image dataset
             image_size (int): Resolution of the image to return
-            data_type (str, optional): The name of the image dataset, should be one of ['stl10', 'clevr', 'shoe']. Defaults to "stl10".
+            data_type (str, optional): The name of the image dataset, should be one of ['stl10', 'clevr']. Defaults to "stl10".
             split (str, optional): Split of the image dataset. Defaults to "train+unlabeled".
             augment (bool, optional): Use random augmentation. Defaults to True.
             label_fn (functional, optional): Functions that map a label from the original dataset to a target label. Defaults to identity function.
 
         Raises:
-            NotImplementedError: Rasises if data_type not in ['stl10', 'clevr', 'shoe'].
+            NotImplementedError: Rasises if data_type not in ['stl10', 'clevr'].
         """
-        if data_type in ["stl10", "clevr", "shoe"]:
+        if data_type in ["stl10", "clevr"]:
             sketch_dir = os.path.join(sketch_root, f"path_{data_type}.pkl")
         else:
             raise NotImplementedError
@@ -86,26 +86,6 @@ class SketchDataset(Dataset):
 
             mask_path = os.path.join(data_root, "clevr", "images", f"CLEVR_{split}_mask_{image_size}.pkl")
 
-        elif data_type == "shoe":
-            with open(os.path.join(data_root, "ShoeV2", "ShoeV2_Coordinate"), "rb") as fp:
-                coordinate = pickle.load(fp)
-
-            idx_to_path = os.listdir(os.path.join(data_root, "ShoeV2", "photo"))
-            idx_to_path.sort()
-
-            img_dataset_ = datasets.ImageFolder(os.path.join(data_root, "ShoeV2"), transform=transform)
-            self.img_dataset = lambda idx: img_dataset_[idx][0]
-            self.label_dataset = lambda idx: idx                    # use the index of the dataset as the label
-
-            assert split in ["train", "test"]
-            path_split = [idx.split("/")[-1].split("_")[0] for idx in coordinate if split in idx]
-            split_idx_to_path = list(dict.fromkeys(path_split))
-            split_idx_to_idx = [idx_to_path.index(path + ".png") for path in split_idx_to_path]
-            self.size = len(split_idx_to_idx)
-            self.idx_to_key = split_idx_to_idx
-
-            mask_path = os.path.join(data_root, "ShoeV2", f"SHOE_mask_{image_size}.pkl")
-
         else:       # something wrong
             raise NotImplementedError
 
@@ -114,40 +94,9 @@ class SketchDataset(Dataset):
             with open(mask_path, "rb") as f:
                 self.masked = pickle.load(f)
 
-        #### For ease of implementation, we left the paired sketch of the shoe image (included in the dataset) as the masked image. 
-        elif data_type == "shoe":
-            print("loading QMUL-ShoeV2 sketch")
-            self.save_shoe_sketch(mask_path, coordinate, idx_to_path)
-
         else:
             print("data masking")
             self.save_masked_img(data_root, image_size, data_type, split, mask_path)
-
-
-    def save_shoe_sketch(self, mask_path, coordinate, idx_to_path):
-        from third_party.rasterize import rasterize_Sketch
-
-        self.masked = list()
-
-        transform = transforms.Compose([
-            transforms.Resize((128, 128)),
-            transforms.ToTensor(),
-        ])
-
-        for idx in range(len(idx_to_path)):
-            shoe_idx = idx_to_path[idx].split(".")[0]
-            vector_xs = [val for key, val in coordinate.items() if shoe_idx in key]
-            sketch_imgs = []
-            for vector_x in vector_xs:
-                sketch_img = rasterize_Sketch(vector_x)
-                sketch_img = Image.fromarray(sketch_img).convert("RGB")
-                sketch_imgs.append(transform(sketch_img))
-
-            sketch_imgs = 1 - torch.stack(sketch_imgs, dim=0)
-            self.masked.append(sketch_imgs)
-
-        with open(mask_path, "wb") as f:
-            pickle.dump(self.masked, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
     def save_masked_img(self, data_root, image_size, data_type, split, mask_path):
@@ -199,11 +148,7 @@ class SketchDataset(Dataset):
 
         img = self.img_dataset(sketch_idx)
         label = self.label_dataset(sketch_idx)
-
-        if self.data_type == "shoe":            # randomly return one of the sketch of the corresponding shoe image
-            mask = random.choice(self.masked[sketch_idx])
-        else:
-            mask = self.masked[index]
+        mask = self.masked[index]
 
         if self.augment:
             if self.data_type == "clevr":
@@ -491,7 +436,7 @@ def get_dataset(data_type, data_root, sketch_root="gt_sketches", eval_only=False
     the training dataset used for linear probing is set aside as the original image dataset.
 
     Args:
-        data_type (string): The name of the original dataset, should be one of 'stl10', 'shoe' or starts with 'mnist', 'transmnist', 'geoclidean' or 'clevr'.
+        data_type (string): The name of the original dataset, should be 'stl10' or starts with 'mnist', 'transmnist', 'geoclidean' or 'clevr'.
                             formats of types starting with 'mnist': mnist_[train domain separated with comma]_[test domain]. ex) mnist_30,45_0,90
                             formats of types starting with 'transmnist': transmnist_[eye | rot{degree} | hflip | scale{factor}]*. ex) transmnist_rot90_hflip
                             formats of types starting with 'geoclidean': geoclidean_[type]_[split]. ex) geoclidean_elements_positive
@@ -576,33 +521,6 @@ def get_dataset(data_type, data_root, sketch_root="gt_sketches", eval_only=False
 
         eval_train_dataset = CLEVRDataset(data_root, image_shape[1], "train", data_size=10000)
         eval_test_dataset = CLEVRDataset(data_root, image_shape[1], "val", data_size=10000)
-
-    elif data_type == "shoe":
-        image_shape = (3, 128, 128)
-        class_num = -1
-
-        if eval_only:
-            train_dataset = None
-        else:
-            train_dataset = SketchDataset(
-                sketch_root,
-                data_root,
-                image_shape[1],
-                data_type="shoe",
-                augment=True,
-                split="train",
-            )
-        val_dataset = SketchDataset(
-            sketch_root,
-            data_root,
-            image_shape[1],
-            data_type="shoe",
-            augment=True,
-            split="test",
-        )
-
-        eval_train_dataset = None
-        eval_test_dataset = val_dataset
 
     elif data_type.startswith("transmnist"):      # only for test
         image_shape = (1, 32, 32)
