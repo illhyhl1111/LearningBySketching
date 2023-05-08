@@ -2,6 +2,9 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-2304.08204-b31b1b.svg)](https://arxiv.org/abs/2304.08204)
 
+> Hyundo Lee*, [Inwoo Hwang](https://bluemoon010.github.io/), Hyunsung Go, Won-Seok Choi, Kibeom Kim, and [Byoung-Tak Zhang](https://bi.snu.ac.kr/~btzhang/) <br>
+> (AI Institute, Seoul National University)
+
 This repository contains the pytorch code for reproducing our paper "Learning Geometry-aware Representations by Sketching".
 
 <p align="center"; style="color:blue">
