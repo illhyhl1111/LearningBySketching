@@ -10,7 +10,7 @@ num_background: 0
 
 lbd_g: 10
 lbd_p: 1
-lbd_e: 0
+lbd_e: 0.1
 
 xpid: CLEVR
 comment: LBS

@@ -268,16 +268,15 @@ class LinearProbe():
 
 
 def eval_sketch(model, tasks):
-    for task in tasks:
-        if task == 'retrieval':
-            _, _, _, test_set, _, _ = get_dataset(args.dataset, args.data_root, eval_only=True)
-            test_loader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=8)
-            results.update(eval_shoe(model, test_loader))
-            del tasks[task]
-            continue
+    if args.dataset == 'shoe':
+        assert tasks == ['retrieval']
+        _, _, _, test_set, _, _ = get_dataset(args.dataset, args.data_root, eval_only=True)
+        test_loader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=8)
+        return eval_shoe(model, test_loader)
 
-    probe = LinearProbe(args.dataset, tasks, model)
-    results = probe.eval_task()
+    for task in tasks:
+        probe = LinearProbe(args.dataset, tasks, model)
+        results = probe.eval_task()
     return results
 
 def eval_shoe(model, test_loader):
@@ -287,9 +286,9 @@ def eval_shoe(model, test_loader):
         sketch_name = []
         start_time = time.time()
 
-        for (img, mask, _, _), _, labels in test_loader:
+        for (img, sketch, _, _), _, labels in test_loader:
             positive_feature = model.get_representation(img.to(args.device), rep_type=args.rep_type)
-            sketch_feature = model.get_representation(mask.to(args.device), rep_type=args.rep_type)
+            sketch_feature = model.get_representation(sketch.to(args.device), rep_type=args.rep_type)
             
             sketch_feature_all.append(sketch_feature)
             sketch_name.append(labels)

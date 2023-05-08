@@ -230,7 +230,6 @@ def guide_loss_fn(inputs, lbs_output):
 
 
 def embed_loss_fn(model, inputs, labels, q, k):
-    img = inputs["img"]
     accuracy = torch.zeros(1).to(args.device)
 
     if args.embed_loss == "none":
@@ -241,17 +240,20 @@ def embed_loss_fn(model, inputs, labels, q, k):
         accuracy = (q.argmax(dim=1) == labels).sum() / q.shape[0] * 100
 
     elif args.embed_loss == "triplet":
-        rep = model.get_representation(img, rep_type=args.rep_type)
+        rep = model.get_representation(inputs["img"], rep_type='h')
         neg = torch.cat([rep[1:], rep[:1]], dim=0)
-        pos = model.get_representation(inputs["mask"], rep_type=args.rep_type)
-        loss_embed = criterion_triplet(F.normalize(rep, dim=1), F.normalize(pos, dim=1), F.normalize(neg, dim=1))
+        pos = model.get_representation(inputs["mask"], rep_type='h')
+        # rep = F.normalize(q, dim=1)
+        # neg = torch.cat([rep[1:], rep[:1]], dim=0)
+        # pos = model.get_projection(inputs["mask"])
+        # pos = F.normalize(pos, dim=1)
+        loss_embed = criterion_triplet(rep, pos, neg)
 
     elif args.embed_loss == "simclr":
         loss_embed = simclr_loss(q, k.detach(), model.get_queue(), temperature=args.temperature)
 
     elif args.embed_loss == "supcon":
-        loss_embed = supcon_loss(q, model.get_queue(), labels, 
-                                 model.get_queue_l(), temperature=args.temperature)
+        loss_embed = supcon_loss(q, model.get_queue(), labels, model.get_queue_l(), temperature=args.temperature)
     
     else:
         raise NotImplementedError

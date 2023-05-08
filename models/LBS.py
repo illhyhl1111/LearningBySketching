@@ -222,14 +222,12 @@ class LBS(nn.Module):
         if args.dataset.startswith('mnist') or args.dataset.startswith('geoclidean'):
             use_l1 = True
             self.train_encoder = True
-
             self.normalize = Compose([
                 Resize(image_size, interpolation=BICUBIC),
             ])
             
         else:
             use_l1 = False
-
             self.normalize = Compose([
                 Resize(image_size, interpolation=BICUBIC),
                 CenterCrop(image_size),
@@ -520,6 +518,10 @@ class SketchModel(nn.Module):
         z_p = lbs_output['z_p']
         z_h = lbs_output['z_h']
         return self.lbs_model.get_representation(rep_type, z_e, z_p, z_h)
+    
+    def get_projection(self, image):
+        lbs_output = self.lbs_model(image)
+        return lbs_output['projection']
     
     def rasterize_stroke(self, stroke, sketch_type='color'):
         return self.renderer(stroke, sketch_type)

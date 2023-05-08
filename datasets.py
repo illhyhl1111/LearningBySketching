@@ -130,9 +130,9 @@ class SketchDataset(Dataset):
         self.masked = list()
 
         transform = transforms.Compose([
-                transforms.Resize((128, 128)),
-                transforms.ToTensor(),
-            ])
+            transforms.Resize((128, 128)),
+            transforms.ToTensor(),
+        ])
 
         for idx in range(len(idx_to_path)):
             shoe_idx = idx_to_path[idx].split(".")[0]
@@ -188,10 +188,10 @@ class SketchDataset(Dataset):
         pos_list = []
         color_list = []
 
-        val = self.paths_dict[sketch_idx][0]
-        for idx in sorted(map(int, val.keys())):
-            pos = torch.tensor(val[f"{idx}"]["pos"]).view(-1, 4, 2)
-            color = torch.tensor(val[f"{idx}"]["color"])
+        path = self.paths_dict[sketch_idx][0]
+        for idx in sorted(map(int, path.keys())):
+            pos = torch.tensor(path[f"{idx}"]["pos"])
+            color = torch.tensor(path[f"{idx}"]["color"])
             pos_list.append(pos)
             color_list.append(color)
 
@@ -209,9 +209,6 @@ class SketchDataset(Dataset):
             if self.data_type == "clevr":
                 img_q, mask_q, pos_q, color_q = random_aug(img, mask, pos, color, min_crop_frac=0.9, flip_p=0, jitter_weak=True)
                 img_k, mask_k, pos_k, color_k = random_aug(img, mask, pos, color, min_crop_frac=0.9, flip_p=0, jitter_weak=True)
-            elif self.data_type == "shoe":
-                img_q, mask_q, pos_q, color_q = random_aug(img, mask, pos, color, jitter_p=0)
-                img_k, mask_k, pos_k, color_k = random_aug(img, mask, pos, color, jitter_p=0)
             else:
                 img_q, mask_q, pos_q, color_q = random_aug(img, mask, pos, color)
                 img_k, mask_k, pos_k, color_k = random_aug(img, mask, pos, color)
@@ -592,7 +589,7 @@ def get_dataset(data_type, data_root, sketch_root="gt_sketches", eval_only=False
                 data_root,
                 image_shape[1],
                 data_type="shoe",
-                augment=False,
+                augment=True,
                 split="train",
             )
         val_dataset = SketchDataset(
@@ -600,7 +597,7 @@ def get_dataset(data_type, data_root, sketch_root="gt_sketches", eval_only=False
             data_root,
             image_shape[1],
             data_type="shoe",
-            augment=False,
+            augment=True,
             split="test",
         )
 
