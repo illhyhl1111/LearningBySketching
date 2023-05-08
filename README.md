@@ -114,17 +114,21 @@ python main.py --data_root /your/path/to/dir --config_path config/stl10.yaml
 
 ```
 
+Note: More than 30G of GPU memory is required to run the settings within the default configuration, and multi-GPU via DDP is not currently supported. \
+If you run out of memory, we recommend changing --clip_model_name to RN50, reducing --num_aug_clip to reduce the amount of memory used by the CLIP model, or reducing the batch size, but performance may be degraded.
+
 Optional arguments:
+* `--embed_loss`: type of $\mathcal{L}_{embed}$, choices: ['none', 'ce', 'simclr', 'supcon']
+* `--lbd_g, --lbd_p, --lbd_e`: weights of loss $\mathcal{L}_{guide}, \mathcal{L}_{percept}, \mathcal{L}_{embed}$, respectively
 * `--num_strokes`: number of total strokes
-* `--num_background`: number of background strokes
+  * Changing the number of strokes requires the generation of a corresponding number of guidance strokes.
+* `--num_background`: number of strokes assigned to background
 * `--enable_color`: enables to learn color-coded strokes (generate black strokes if disabled)
-  * `--disable_color`: set `enable_color` as False
+  * `--disable_color`: sets `enable_color` as False
 * `--rep_type`: the form of the final representation. options:
   * `LBS+`: $(z_e, z_p, z_h)$
   * `LBS`: $(z_e, z_p)$
   * combinations of 'e', 'p', 'h': Vector concatenating $z_e, z_p, z_h$, respectively. ex) 'ph' -> $(z_p, z_h)$
-* `--embed_loss`: type of $\mathcal{L}_{embed}$, choices: ['none', 'ce', 'simclr', 'supcon']
-* `--lbd_g, --lbd_p, --lbd_e`: weights of loss $\mathcal{L}_{guide}, \mathcal{L}_{percept}, \mathcal{L}_{embed}$, respectively
 
 ### Evaluation
 
@@ -137,5 +141,12 @@ python evaluate.py logs/{dataset}/{target_folder}
 If you make use of our work, please cite our paper:
 
 ```
-TODO
+@misc{lee2023learning,
+      title={Learning Geometry-aware Representations by Sketching}, 
+      author={Hyundo Lee and Inwoo Hwang and Hyunsung Go and Won-Seok Choi and Kibeom Kim and Byoung-Tak Zhang},
+      year={2023},
+      eprint={2304.08204},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
 ```
