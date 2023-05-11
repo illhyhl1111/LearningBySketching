@@ -26,7 +26,6 @@ parser.add_argument("--target", help="target image path")
 parser.add_argument("--output_dir", type=str, default="")
 parser.add_argument("--path_svg", type=str, default="none")
 parser.add_argument("--use_wandb", type=int, default=0)
-parser.add_argument("--num_iter", type=int, default=500)
 parser.add_argument("--num_stages", type=int, default=1)
 parser.add_argument("--lr", type=float, default=1.0)
 parser.add_argument("--color_lr", type=float, default=0.01)
@@ -95,6 +94,7 @@ def main(args=None):
     if args is None:
         args = parse_arguments()
         args.update(vars(parser.parse_args()))
+    args.num_iter = max(args.key_steps)
     args.image_scale = args.image_size
     
     np.random.seed(args.seed)
@@ -110,6 +110,15 @@ def main(args=None):
     print(len(dataset))
     
     renderers = initialize_renderers(args)
+
+    for batch_index, image in enumerate(dataloader):
+        for step in tqdm(range(args.num_iter)):
+            import time
+            time.sleep(0.001)
+
+        print(image.size())
+        if batch_index == 5:
+            break
 
 
 if __name__ == '__main__':
