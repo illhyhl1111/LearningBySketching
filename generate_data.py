@@ -68,26 +68,41 @@ class ImageDataset(Dataset):
         return image
 
 
-def initialize_renderers(args):
-    renderers = []
-    renderers.append(Painter(
-        args,
-        args.num_strokes, args.num_segments,
-        imsize=args.image_scale,
-        device=args.device,
-    ))
-    for _ in range(args.batch_size - 1):
-        renderers.append(Painter(
+class DataGenerator:
+    def __init__(self, args):
+        self.args = args
+        
+        # Initialize the renderers.
+        self.renderers = []
+        self.renderers.append(Painter(
             args,
             args.num_strokes, args.num_segments,
             imsize=args.image_scale,
             device=args.device,
-            clip_model=renderers[0].clip_model,
-            clip_preprocess=renderers[0].clip_preprocess,
-            dino_model=renderers[0].dino_model
         ))
+        for _ in range(args.batch_size - 1):
+            self.renderers.append(Painter(
+                args,
+                args.num_strokes, args.num_segments,
+                imsize=args.image_scale,
+                device=args.device,
+                clip_model=self.renderers[0].clip_model,
+                clip_preprocess=self.renderers[0].clip_preprocess,
+                dino_model=self.renderers[0].dino_model
+            ))
+        
+    def generate_for_batch(self, image):
+        for step in tqdm(range(self.args.num_iter)):
+            import time
+            time.sleep(0.001)
 
-    return renderers
+    def generate_for_dataset(self, dataloader):
+        for batch_index, image in enumerate(dataloader):
+            self.generate_for_batch(image)
+
+            print(image.size())
+            if batch_index == 5:
+                break
 
 
 def main(args=None):
@@ -96,7 +111,7 @@ def main(args=None):
         args.update(vars(parser.parse_args()))
     args.num_iter = max(args.key_steps)
     args.image_scale = args.image_size
-    
+
     np.random.seed(args.seed)
 
     transform = transforms.Compose([
@@ -108,17 +123,9 @@ def main(args=None):
     
     # TODO: debug
     print(len(dataset))
-    
-    renderers = initialize_renderers(args)
 
-    for batch_index, image in enumerate(dataloader):
-        for step in tqdm(range(args.num_iter)):
-            import time
-            time.sleep(0.001)
-
-        print(image.size())
-        if batch_index == 5:
-            break
+    data_generator = DataGenerator(args)
+    data_generator.generate_for_dataset(dataloader)
 
 
 if __name__ == '__main__':
