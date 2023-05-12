@@ -1,5 +1,5 @@
 import random
-import CLIP_.clip as clip
+from ..CLIP_ import clip
 import numpy as np
 import pydiffvg
 from .. import sketch_utils as utils
@@ -312,7 +312,7 @@ class Painter(torch.nn.Module):
                     0,   # seed
                     None,
                     *scene_args)
-        return img
+        return img.to(self.device)
     
     def parameters(self):
         self.points_vars = []

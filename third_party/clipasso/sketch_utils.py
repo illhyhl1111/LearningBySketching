@@ -296,16 +296,20 @@ def get_mask_u2net(args, pil_im, save_png=True):
 
     return im_final, predict
 
+def get_u2net(args):
+    model_dir = os.path.join("./U2Net_/saved_models/u2net.pth")
+    net = U2NET(3, 1)
+    if torch.cuda.is_available() and args.use_gpu:
+        net.load_state_dict(torch.load(model_dir))
+        net.cuda()
+    else:
+        net.load_state_dict(torch.load(model_dir, map_location='cpu'))
+    net.eval()
+    return net
+
 def get_mask_u2net_batch(args, img, net=None, return_foreground=True, return_background=False):
     if net is None:
-        model_dir = os.path.join("./U2Net_/saved_models/u2net.pth")
-        net = U2NET(3, 1)
-        if torch.cuda.is_available() and args.use_gpu:
-            net.load_state_dict(torch.load(model_dir))
-            net.cuda()
-        else:
-            net.load_state_dict(torch.load(model_dir, map_location='cpu'))
-        net.eval()
+        net = get_u2net(args)
 
     mean = torch.tensor([0.48145466, 0.4578275, 0.40821073]).view(1, 3, 1, 1).to(img.device)
     std = torch.tensor([0.26862954, 0.26130258, 0.27577711]).view(1, 3, 1, 1).to(img.device)
