@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-from torchvision import transforms
 from torch.utils.data import Dataset, DataLoader, Subset
+from torchvision import datasets, transforms
 
 from third_party.clipasso.models.painter_params import Painter, PainterOptimizer
 from third_party.clipasso.models.loss import Loss
@@ -23,7 +23,10 @@ from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 
+# general arguments
 parser.add_argument('--output_dir', type=str, default='./output')
+parser.add_argument('--dataset', type=str, help='clevr_train, clevr_val, stl10_train+unlabeled, stl10_test, etc..')
+parser.add_argument('--data_root', type=str, help='the path to the root directory containing datasets to process.')
 parser.add_argument('--img_paths', type=str, nargs='+', help='image file-paths (with wildcards) to process.')
 parser.add_argument('--key_steps', type=int, nargs='+',
                     default=[0, 50, 100, 200, 400, 700, 1000, 1500, 2000])
@@ -31,11 +34,13 @@ parser.add_argument('--batch_size', type=int, default=10)
 parser.add_argument('--num_workers', type=int, default=10)
 parser.add_argument('--chunk', type=int, nargs=2, help='--chunk (num_chunks) (chunk_index)')
 
+# optimization arguments
 parser.add_argument('--width', type=float, default=1.5, help='foreground-stroke width')
 parser.add_argument('--width_bg', type=float, default=8.0, help='background-stroke width')
 parser.add_argument('--image_size', type=int, default=224)
 parser.add_argument('--lr', type=float, default=1.0)
 
+# extra arguments
 parser.add_argument('--no_tqdm', action='store_true')
 parser.add_argument('--no_track_time', action='store_true')
 parser.add_argument('--visualize', action='store_true')
@@ -73,6 +78,7 @@ parser.add_argument("--clip_text_guide", type=float, default=0)
 parser.add_argument("--text_target", type=str, default="none")
 
 
+# Builds a dataset with the specified image file-paths.
 class ImageDataset(Dataset):
     def __init__(self, path_formats, transform=None):
         self.path_formats = path_formats
@@ -89,13 +95,26 @@ class ImageDataset(Dataset):
     def __getitem__(self, index):
         image_path = self.image_paths[index]
         image = Image.open(image_path).convert('RGB')
-
         if self.transform is not None:
             image = self.transform(image)
 
-        return index, image
+        # dummy label
+        return image, -1
 
 
+# Prefixes the index and drops the label for each sample.
+class IndexedDataset(Dataset):
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, index):
+        return index, self.dataset[index][0]
+
+
+# The main class that generates sketch data with the specified image dataset.
 class DataGenerator(nn.Module):
     def __init__(self, args):
         super(DataGenerator, self).__init__()
@@ -251,7 +270,10 @@ class DataGenerator(nn.Module):
         min_index = next(iter(dataloader.dataset.indices))
         max_index = next(iter(reversed(dataloader.dataset.indices)))
 
-        for batch_index, (index, image) in enumerate(dataloader):
+        generated_samples = 0
+        total_samples = len(dataloader.dataset)
+        
+        for index, image in dataloader:
             if track_time:
                 print(f'generating samples for {index.min().item()}..{index.max().item()} of {min_index}..{max_index}:')
             image = image.to(self.args.device)
@@ -266,11 +288,20 @@ class DataGenerator(nn.Module):
                     self.save_sample_visualization(sample_name, sample_image, sample_paths)
 
             if track_time:
+                generated_samples += image.size(0)
+                completion = generated_samples / total_samples
                 time_passed = time.time() - start_time
-                # TODO
+                time_left = time_passed / completion - time_passed
+                tp_days, tp_hours, tp_minutes, _ = to_dhms(time_passed)
+                tl_days, tl_hours, tl_minutes, _ = to_dhms(time_left)
+                print(
+                    f'{completion*100:.02f}% ({generated_samples}/{total_samples}) complete.'\
+                    f' {tp_days}d {tp_hours}h {tp_minutes}m passed.'\
+                    f' expected {tl_days}d {tl_hours}h {tl_minutes}m left.'
+                )
 
         if track_time:
-            print(f'took {time_passed:.02f}s to generate {len(dataloader.dataset)} samples.')
+            print(f'took {time_passed:.02f}s to generate {total_samples} samples.')
 
         return path_dicts, mask_areas
 
@@ -280,20 +311,45 @@ def cubic_bezier(p, t):
     t = t.reshape(1, -1, 1)
     return ((1-t)**3)*p[:,0] + 3*((1-t)**2)*t*p[:,1] + 3*(1-t)*(t**2)*p[:,2] + (t**3)*p[:,3]
 
+def to_dhms(seconds):
+    minutes, seconds = divmod(round(seconds), 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+    return days, hours, minutes, seconds
+
 
 def get_dataset(args):
+    assert (args.img_paths is not None) ^ (args.dataset is not None and args.data_root is not None),\
+        "either \'img_paths\' or \'dataset\' and \'data_root\' must be specified!"
+
     transform = transforms.Compose([
         transforms.Resize((args.image_size, args.image_size)),
         transforms.ToTensor(),
     ])
 
-    dataset = ImageDataset(args.img_paths, transform=transform)
+    # edit here to add custom datasets to process.
+    if args.dataset is not None:
+        if args.dataset.startswith('stl10_'):
+            _, split = args.dataset.split('stl10_')
+            dataset = datasets.STL10(args.data_root, transform=transform, download=True, split=split)
+        elif args.dataset.startswith('clevr_'):
+            _, split = args.dataset.split('clevr_')
+            img_path = os.path.join(args.data_root, f'clevr/images/{split}/CLEVR_{split}_*.png')
+            dataset = ImageDataset([img_path], transform=transform)
+    else:
+        dataset = ImageDataset(args.img_paths, transform=transform)
+
     if args.chunk is not None:
         num_chunks, chunk_index = args.chunk
         chunk_size = int(np.ceil(len(dataset) / num_chunks))
         chunk_start = chunk_size * chunk_index
         chunk_end = min(chunk_start + chunk_size, len(dataset))
-        dataset = Subset(dataset, range(chunk_start, chunk_end))
+    else:
+        chunk_start = 0
+        chunk_end = len(dataset)
+
+    dataset = IndexedDataset(dataset)
+    dataset = Subset(dataset, range(chunk_start, chunk_end))
 
     return dataset
 
@@ -301,15 +357,11 @@ def get_dataset(args):
 def main(args=None):
     if args is None:
         args = parse_arguments()
-        args.update(vars(parser.parse_args()))
+        args.update(vars(parser.parse_known_args()[0]))
     args.num_iter = max(args.key_steps)
+    args.use_gpu = not args.no_cuda
     args.image_scale = args.image_size
     args.color_lr = 0.01
-
-    # TODO: debug
-    # args.use_gpu = False
-    # args.no_cuda = True
-    # args.device = 'cpu'
 
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
@@ -329,6 +381,7 @@ def main(args=None):
         pickle.dump(path_dicts, file)
     with open(os.path.join(args.output_dir, f'maskareas_{args.seed}_{args.chunk[1]}.pkl'), 'wb') as file:
         pickle.dump(mask_areas, file)
+
 
 if __name__ == '__main__':
     main()
