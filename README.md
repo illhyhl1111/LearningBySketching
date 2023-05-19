@@ -96,15 +96,26 @@ To train our model with the CLEVR and STL-10 datasets, you must first generate g
     put the downloaded files into `gt_sketches/`
     
 2. Generating the guidance strokes with:
+
+  * install pydiffvg
+```
+sudo apt install python3-dev cmake
+git clone https://github.com/BachiLi/diffvg
+cd diffvg
+git submodule update --init --recursive
+python setup.py install
+cd ../
+```
+
   * STL10 (train+unlabeled)
 ```
-python generate_data.py --config_path config/stl10.yaml --output_dir ./output/stl10_train+unlabeled/ --dataset stl10_train+unlabeled --data_root /your/path/to/dir --visualize device cuda:0
-python merge_data.py --output_file ./output/stl10_train+unlabeled/path_stl10.pkl --data_files ./output/stl10_train+unlabeled/data_* --maskarea_files ./output/stl10_train+unlabeled/maskareas_*
+python generate_data.py --config_path config/stl10.yaml --output_dir ./gt_sketches/stl10_train+unlabeled/ --dataset stl10_train+unlabeled --data_root /your/path/to/dir --visualize device cuda:0
+python merge_data.py --output_file ./gt_sketches/path_stl10.pkl --data_files ./gt_sketches/stl10_train+unlabeled/data_* --maskarea_files ./gt_sketches/stl10_train+unlabeled/maskareas_*
 ```
   * CLEVR (train)
 ```
-python generate_data.py --config_path config/clevr.yaml --output_dir ./output/clevr_train --dataset clevr_train --data_root /your/path/to/dir --visualize --device cuda:0
-python merge_data.py --output_file ./output/clevr_train/path_clevr.pkl --data_files ./output/clevr_train/data_* --maskarea_files ./output/clevr_train/maskareas_*
+python generate_data.py --config_path config/clevr.yaml --output_dir ./gt_sketches/clevr_train --dataset clevr_train --data_root /your/path/to/dir --visualize --device cuda:0
+python merge_data.py --output_file ./gt_sketches/path_clevr.pkl --data_files ./gt_sketches/clevr_train/data_* --maskarea_files ./gt_sketches/clevr_train/maskareas_*
 ```
   The execution of `generate_data.py` can be splited into multiple chunks with `--chunk (num_chunk) (chunk_idx)` options
 ```
