@@ -98,18 +98,18 @@ To train our model with the CLEVR and STL-10 datasets, you must first generate g
 2. Generating the guidance strokes with:
   * STL10 (train+unlabeled)
 ```
-python generate_data.py --config_path config/stl10.yaml --output_dir ./output/stl10_train+unlabeled/ --dataset stl10_train+unlabeled --data_root /your/path/to/dir --visualize device cuda:0
+python generate_data.py --config_path config/stl10.yaml --output_dir ./output/stl10_train+unlabeled/ --dataset stl10_train+unlabeled --data_root /your/path/to/dir --visualize device cuda
 python merge_data.py --output_file ./output/stl10_train+unlabeled/path_stl10.pkl --data_files ./output/stl10_train+unlabeled/data_* --maskarea_files ./output/stl10_train+unlabeled/maskareas_*
 ```
   * CLEVR (train)
 ```
-python generate_data.py --config_path config/clevr.yaml --output_dir ./output/clevr_train --dataset clevr_train --data_root /your/path/to/dir --visualize --device cuda:0
+python generate_data.py --config_path config/clevr.yaml --output_dir ./output/clevr_train --dataset clevr_train --data_root /your/path/to/dir --visualize --device cuda
 python merge_data.py --output_file ./output/clevr_train/path_clevr.pkl --data_files ./output/clevr_train/data_* --maskarea_files ./output/clevr_train/maskareas_*
 ```
   The execution of `generate_data.py` can be splited into multiple chunks with `--chunk (num_chunk) (chunk_idx)` options
 ```
+python generate_data.py ... --chunk 2 0
 python generate_data.py ... --chunk 2 1
-python generate_data.py ... --chunk 2 2
 ```
 
 ### Train LBS
