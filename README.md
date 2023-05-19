@@ -114,7 +114,7 @@ python merge_data.py --output_file ./gt_sketches/path_stl10.pkl --data_files ./g
 ```
   * CLEVR (train)
 ```
-python generate_data.py --config_path config/clevr.yaml --output_dir ./gt_sketches/clevr_train --dataset clevr_train --data_root /your/path/to/dir --visualize --device cuda
+python generate_data.py --config_path config/clevr.yaml --output_dir ./gt_sketches/clevr_train --dataset clevr_train --data_root /your/path/to/dir --num_generation 10000 --visualize --device cuda
 python merge_data.py --output_file ./gt_sketches/path_clevr.pkl --data_files ./gt_sketches/clevr_train/data_* --maskarea_files ./gt_sketches/clevr_train/maskareas_*
 ```
   The execution of `generate_data.py` can be splited into multiple chunks with `--chunk (num_chunk) (chunk_idx)` options

@@ -33,6 +33,7 @@ parser.add_argument('--key_steps', type=int, nargs='+',
                     default=[0, 50, 100, 200, 400, 700, 1000, 1500, 2000])
 parser.add_argument('--batch_size', type=int, default=10)
 parser.add_argument('--num_workers', type=int, default=10)
+parser.add_argument('--num_generation', type=int, default=-1, help='number of sketches to generate, generate all sketches in the dataset if -1')
 parser.add_argument('--chunk', type=int, nargs=2, help='--chunk (num_chunks) (chunk_index)')
 
 # optimization arguments
@@ -345,14 +346,15 @@ def get_dataset(args):
     else:
         dataset = ImageDataset(args.img_paths, transform=transform)
 
+    num_generation = len(dataset) if args.num_generation == -1 else args.num_generation
     if args.chunk is not None:
         num_chunks, chunk_index = args.chunk
-        chunk_size = int(np.ceil(len(dataset) / num_chunks))
+        chunk_size = int(np.ceil(num_generation / num_chunks))
         chunk_start = chunk_size * chunk_index
-        chunk_end = min(chunk_start + chunk_size, len(dataset))
+        chunk_end = min(chunk_start + chunk_size, num_generation)
     else:
         chunk_start = 0
-        chunk_end = len(dataset)
+        chunk_end = num_generation
 
     dataset = IndexedDataset(dataset)
     dataset = Subset(dataset, range(chunk_start, chunk_end))
