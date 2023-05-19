@@ -19,6 +19,7 @@ import random
 import matplotlib.pyplot as plt
 from glob import glob
 from tqdm import tqdm
+import subprocess as sp
 
 
 parser = argparse.ArgumentParser()
@@ -77,6 +78,11 @@ parser.add_argument("--clip_fc_loss_weight", type=float, default=0.1)
 parser.add_argument("--clip_text_guide", type=float, default=0)
 parser.add_argument("--text_target", type=str, default="none")
 
+
+abs_path = os.path.abspath(os.getcwd())
+if not os.path.isfile(f"{abs_path}/U2Net_/saved_models/u2net.pth"):
+    sp.run(["gdown", "https://drive.google.com/uc?id=1ao1ovG1Qtx4b7EoskHXmi2E9rp5CHLcZ",
+            "-O", "U2Net_/saved_models/"])
 
 # Builds a dataset with the specified image file-paths.
 class ImageDataset(Dataset):
