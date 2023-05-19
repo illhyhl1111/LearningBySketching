@@ -109,7 +109,7 @@ cd ../
 
   * STL10 (train+unlabeled)
 ```
-python generate_data.py --config_path config/stl10.yaml --output_dir ./gt_sketches/stl10_train+unlabeled/ --dataset stl10_train+unlabeled --data_root /your/path/to/dir --visualize device cuda:0
+python generate_data.py --config_path config/stl10.yaml --output_dir ./gt_sketches/stl10_train+unlabeled/ --dataset stl10_train+unlabeled --data_root /your/path/to/dir --visualize --device cuda
 python merge_data.py --output_file ./gt_sketches/path_stl10.pkl --data_files ./gt_sketches/stl10_train+unlabeled/data_* --maskarea_files ./gt_sketches/stl10_train+unlabeled/maskareas_*
 ```
   * CLEVR (train)
