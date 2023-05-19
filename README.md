@@ -119,8 +119,8 @@ python merge_data.py --output_file ./gt_sketches/path_clevr.pkl --data_files ./g
 ```
   The execution of `generate_data.py` can be splited into multiple chunks with `--chunk (num_chunk) (chunk_idx)` options
 ```
+python generate_data.py ... --chunk 2 0
 python generate_data.py ... --chunk 2 1
-python generate_data.py ... --chunk 2 2
 ```
 
 ### Train LBS
