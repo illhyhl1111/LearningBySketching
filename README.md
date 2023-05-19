@@ -89,14 +89,28 @@ The structure should be as:
 
 To train our model with the CLEVR and STL-10 datasets, you must first generate guidance strokes.
 
-1. You can generate the guidance strokes with:
-   - TODO
-
-2. You can download pre-generated strokes from:
+1. Downloading pre-generated strokes from:
    - CLEVR: [link](https://drive.google.com/file/d/1n7cjl5yGaUaeXKURJMwTWGeID-kzKqv_/view?usp=share_link)
    - STL-10: [link](https://drive.google.com/file/d/1UTssJZ89kueJhXubv0s7HPveImBlbOb2/view?usp=share_link)
   
     put the downloaded files into `gt_sketches/`
+    
+2. Generating the guidance strokes with:
+  * STL10 (train+unlabeled)
+```
+python generate_data.py --config_path config/stl10.yaml --output_dir ./output/stl10_train+unlabeled/ --dataset stl10_train+unlabeled --data_root /your/path/to/dir --visualize device cuda:0
+python merge_data.py --output_file ./output/stl10_train+unlabeled/path_stl10.pkl --data_files ./output/stl10_train+unlabeled/data_* --maskarea_files ./output/stl10_train+unlabeled/maskareas_*
+```
+  * CLEVR (train)
+```
+python generate_data.py --config_path config/clevr.yaml --output_dir ./output/clevr_train --dataset clevr_train --data_root /your/path/to/dir --visualize --device cuda:0
+python merge_data.py --output_file ./output/clevr_train/path_clevr.pkl --data_files ./output/clevr_train/data_* --maskarea_files ./output/clevr_train/maskareas_*
+```
+  The execution of `generate_data.py` can be splited into multiple chunks with `--chunk (num_chunk) (chunk_idx)` options
+```
+python generate_data.py ... --chunk 2 1
+python generate_data.py ... --chunk 2 2
+```
 
 ### Train LBS
 
@@ -117,7 +131,7 @@ python main.py --data_root /your/path/to/dir --config_path config/stl10.yaml
 
 ```
 
-Note: More than 30G of GPU memory is required to run the settings within the default configuration, and multi-GPU via DDP is not currently supported. \
+Note: More than 30G of GPU memory is required to run the settings within the default configuration for CLEVR and STL-10. Utilzing multi-GPU with DDP is not currently supported. \
 If you run out of memory, we recommend changing --clip_model_name to RN50, reducing --num_aug_clip to reduce the amount of memory used by the CLIP model, or reducing the batch size, but performance may be degraded.
 
 Optional arguments:
