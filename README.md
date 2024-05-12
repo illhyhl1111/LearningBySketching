@@ -168,13 +168,12 @@ python evaluate.py logs/{dataset}/{target_folder}
 
 If you make use of our work, please cite our paper:
 
-```
-@misc{lee2023learning,
-      title={Learning Geometry-aware Representations by Sketching}, 
-      author={Hyundo Lee and Inwoo Hwang and Hyunsung Go and Won-Seok Choi and Kibeom Kim and Byoung-Tak Zhang},
-      year={2023},
-      eprint={2304.08204},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+```bib
+@inproceedings{lee2023learning,
+  title={Learning Geometry-aware Representations by Sketching},
+  author={Lee, Hyundo and Hwang, Inwoo and Go, Hyunsung and Choi, Won-Seok and Kim, Kibeom and Zhang, Byoung-Tak},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  pages={23315--23326},
+  year={2023}
 }
 ```
