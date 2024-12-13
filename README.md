@@ -87,7 +87,7 @@ The structure should be as:
 
 ### Generate guidance stroke
 
-To train our model with the CLEVR and STL-10 datasets, you must first generate guidance strokes.
+To train our model with the CLEVR and STL-10 datasets, you must first generate or download guidance strokes.
 
 1. Downloading pre-generated strokes from:
    - CLEVR: [link](https://drive.google.com/file/d/1n7cjl5yGaUaeXKURJMwTWGeID-kzKqv_/view?usp=share_link)
