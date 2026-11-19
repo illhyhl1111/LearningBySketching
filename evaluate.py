@@ -99,7 +99,7 @@ class LinearProbe():
         self.test_set = RepLabelPair(model, test_loader_, self.label_fn_dict, args.rep_type)
 
         self.train_loader = DataLoader(self.train_set, shuffle=True, pin_memory=False, batch_size=args.eval_batch_size, drop_last=True)
-        self.test_loader = DataLoader(self.test_set, shuffle=False, pin_memory=False, batch_size=args.eval_batch_size, drop_last=True)
+        self.test_loader = DataLoader(self.test_set, shuffle=False, pin_memory=False, batch_size=args.eval_batch_size, drop_last=False)
 
         self.critic = torch.nn.CrossEntropyLoss()
 
